@@ -73,3 +73,13 @@ The KB2040 parses **Channel 5** of the S.BUS transmitter to switch control modes
 * **RC Override (Transmitter Channel 5 HIGH)**: NeoPixel turns **Solid Blue**. The rover is driven directly using the RC transmitter stick controls.
 * **Web Control (Transmitter Channel 5 LOW)**: NeoPixel turns **Solid Green** (or flashes green if idle). The rover accepts commands from the web joystick interface. If the web client stops sending heartbeats for > 1.0s, the rover safely stops.
 * **Failsafe Mode**: If S.BUS signal is lost entirely, the NeoPixel flashes **Red** and the motors stop.
+
+---
+
+## Desktop Shortcut (Pi 500)
+
+We created a desktop shortcut named **Rover Web Control** directly on the Pi 500's Desktop.
+* **Launch**: Double-clicking the shortcut runs the `/home/user/start_rover.sh` script.
+* **Function**: It automatically stops any existing background instance of the web server, opens a new terminal window, and starts the fresh web server process.
+* **Telemetry & Logs**: The terminal window remains visible while driving, allowing you to monitor the serial telemetry and debug logs in real time.
+* **Exit**: Press `Enter` in the terminal or close the window to safely shut down the server.
