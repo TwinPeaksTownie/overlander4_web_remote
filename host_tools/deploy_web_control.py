@@ -38,7 +38,8 @@ latest_telemetry = {
     "ch1": 1000,
     "ch2": 1000,
     "ch5": 1000,
-    "flags": 0
+    "flags": 0,
+    "so_arm_active": 2 # 0: inactive, 1: active, 2: offline
 }
 
 # Joystick target values (Y = throttle, X = steering)
@@ -126,6 +127,31 @@ def camera_worker(device_idx):
                     cap.release()
                     cap = None
                 time.sleep(2.0)
+
+# SO-101 arm status poller thread (runs pgrep over SSH)
+def so_arm_poller():
+    global latest_telemetry
+    import subprocess
+    print("Starting SO-101 arm status poller thread...")
+    while True:
+        try:
+            res = subprocess.run(
+                ["ssh", "-o", "ConnectTimeout=2", "user@192.168.0.38", "pgrep -f so101_host.py"],
+                capture_output=True, text=True, timeout=3.0
+            )
+            if res.returncode == 0:
+                status = 1
+            elif res.returncode == 1:
+                status = 0
+            else:
+                status = 2
+        except Exception:
+            status = 2
+            
+        with lock:
+            latest_telemetry["so_arm_active"] = status
+            
+        time.sleep(2.5)
 
 # Serial communication thread
 def serial_worker():
@@ -448,11 +474,6 @@ HTML_PAGE = \"\"\"<!DOCTYPE html>
         .stop-button:hover {
             transform: translateY(-2px);
             box-shadow: 0 12px 20px rgba(255, 65, 108, 0.45);
-        }
-
-        .stop-button:active {
-            transform: scale(0.97);
-        }
     </style>
 </head>
 <body>
@@ -479,39 +500,55 @@ HTML_PAGE = \"\"\"<!DOCTYPE html>
         </div>
 
         <div class="main-grid">
-            <!-- Left Side: Telemetry -->
-            <div class="card">
-                <h2>System Telemetry</h2>
-                <div class="telemetry-row">
-                    <div class="indicator">
-                        <span class="indicator-label">Active Mode</span>
-                        <div id="modeVal" class="mode-badge mode-web">WEB CONTROL</div>
+            <!-- Left Side: Telemetry & SO-101 Arm Control -->
+            <div style="display: flex; flex-direction: column; gap: 1.2rem;">
+                <div class="card">
+                    <h2>System Telemetry</h2>
+                    <div class="telemetry-row">
+                        <div class="indicator">
+                            <span class="indicator-label">Active Mode</span>
+                            <div id="modeVal" class="mode-badge mode-web">WEB CONTROL</div>
+                        </div>
+                        <div class="indicator">
+                            <span class="indicator-label">Transmitter Connection</span>
+                            <span id="sbusVal" class="indicator-value" style="color: var(--secondary);">ACTIVE</span>
+                        </div>
+                        <div class="indicator">
+                            <span class="indicator-label">Motor 1 Speed (Left)</span>
+                            <span id="motor1Val" class="indicator-value">1500 µs</span>
+                        </div>
+                        <div class="indicator">
+                            <span class="indicator-label">Motor 2 Speed (Right)</span>
+                            <span id="motor2Val" class="indicator-value">1500 µs</span>
+                        </div>
                     </div>
-                    <div class="indicator">
-                        <span class="indicator-label">Transmitter Connection</span>
-                        <span id="sbusVal" class="indicator-value" style="color: var(--secondary);">ACTIVE</span>
+                </div>
+
+                <div class="card">
+                    <h2>SO-101 Follower Arm</h2>
+                    <div style="display: flex; justify-content: space-between; align-items: center; margin-top: 0.2rem;">
+                        <span style="font-size: 0.95rem; color: rgba(255, 255, 255, 0.6);">Arm Host Status:</span>
+                        <div id="armStatusVal" class="mode-badge status-offline">OFFLINE</div>
                     </div>
-                    <div class="indicator">
-                        <span class="indicator-label">Motor 1 Speed (Left)</span>
-                        <span id="motor1Val" class="indicator-value">1500 µs</span>
-                    </div>
-                    <div class="indicator">
-                        <span class="indicator-label">Motor 2 Speed (Right)</span>
-                        <span id="motor2Val" class="indicator-value">1500 µs</span>
+                    <div style="display: flex; gap: 0.8rem; margin-top: 0.5rem;">
+                        <button id="btnStartArm" class="action-button start" onclick="controlSoArm('start')">Start Arm</button>
+                        <button id="btnStopArm" class="action-button stop" onclick="controlSoArm('stop')">Stop Arm</button>
                     </div>
                 </div>
             </div>
 
             <!-- Right Side: Joystick Control & Stop -->
-            <div class="card" style="justify-content: space-between;">
-                <h2>Joystick Control</h2>
-                <p class="subtitle" style="text-align: center;">Touch & drag handle to drive. Release to stop.</p>
-                <div class="joystick-container">
-                    <div class="joystick-base" id="joyBase">
-                        <div class="joystick-handle" id="joyHandle"></div>
+            <div style="display: flex; flex-direction: column; gap: 1.2rem;">
+                <div class="card" style="flex: 1; justify-content: space-between;">
+                    <h2>Joystick Control</h2>
+                    <p class="subtitle" style="text-align: center;">Touch & drag handle to drive. Release to stop.</p>
+                    <div class="joystick-container">
+                        <div class="joystick-base" id="joyBase">
+                            <div class="joystick-handle" id="joyHandle"></div>
+                        </div>
                     </div>
+                    <button class="stop-button" onclick="emergencyStop()">Emergency Stop</button>
                 </div>
-                <button class="stop-button" onclick="emergencyStop()">Emergency Stop</button>
             </div>
         </div>
     </div>
@@ -536,6 +573,19 @@ HTML_PAGE = \"\"\"<!DOCTYPE html>
                 // Update motor speeds
                 document.getElementById('motor1Val').textContent = data.left_out + " µs";
                 document.getElementById('motor2Val').textContent = data.right_out + " µs";
+                
+                // Update SO Arm status
+                const armBadge = document.getElementById('armStatusVal');
+                if (data.so_arm_active === 1) {
+                    armBadge.textContent = "RUNNING";
+                    armBadge.className = "mode-badge status-active";
+                } else if (data.so_arm_active === 0) {
+                    armBadge.textContent = "STOPPED";
+                    armBadge.className = "mode-badge status-inactive";
+                } else {
+                    armBadge.textContent = "OFFLINE";
+                    armBadge.className = "mode-badge status-offline";
+                }
                 
             } catch (err) {
                 console.error("Telemetry fetch failed", err);
@@ -641,6 +691,21 @@ HTML_PAGE = \"\"\"<!DOCTYPE html>
         function emergencyStop() {
             resetHandle();
         }
+
+        async function controlSoArm(action) {
+            try {
+                const armBadge = document.getElementById('armStatusVal');
+                armBadge.textContent = action === "start" ? "STARTING..." : "STOPPING...";
+                
+                await fetch('/api/so_arm', {
+                    method: 'POST',
+                    headers: {'Content-Type': 'application/x-www-form-urlencoded'},
+                    body: `action=${action}`
+                });
+            } catch (err) {
+                console.error("Failed to control SO arm", err);
+            }
+        }
     </script>
 </body>
 </html>
@@ -714,6 +779,45 @@ class RoverHandler(http.server.SimpleHTTPRequestHandler):
             
             self.send_response(400)
             self.end_headers()
+        elif self.path == "/api/so_arm":
+            content_length = int(self.headers['Content-Length'])
+            post_data = self.rfile.read(content_length).decode('utf-8')
+            params = urllib.parse.parse_qs(post_data)
+            
+            if "action" in params:
+                action = params["action"][0]
+                import subprocess
+                try:
+                    if action == "start":
+                        subprocess.run(
+                            ["ssh", "-o", "ConnectTimeout=2", "user@192.168.0.38", "pkill -f so101_host.py"],
+                            timeout=3.0
+                        )
+                        subprocess.run(
+                            ["ssh", "-o", "ConnectTimeout=2", "user@192.168.0.38", "nohup /home/user/so101/.venv/bin/python /home/user/so101/so101_host.py --port /dev/ttyACM0 --id follower > /home/user/so101/host.log 2>&1 &"],
+                            timeout=3.0
+                        )
+                    elif action == "stop":
+                        subprocess.run(
+                            ["ssh", "-o", "ConnectTimeout=2", "user@192.168.0.38", "pkill -f so101_host.py"],
+                            timeout=3.0
+                        )
+                        
+                    with lock:
+                        latest_telemetry["so_arm_active"] = 1 if action == "start" else 0
+                        
+                    self.send_response(200)
+                    self.send_header("Content-Type", "application/json")
+                    self.end_headers()
+                    self.wfile.write(json.dumps({"status": "ok"}).encode('utf-8'))
+                    return
+                except Exception as e:
+                    self.send_response(500)
+                    self.end_headers()
+                    self.wfile.write(str(e).encode('utf-8'))
+                    return
+            self.send_response(400)
+            self.end_headers()
         else:
             self.send_response(404)
             self.end_headers()
@@ -730,6 +834,9 @@ def main():
     # Start camera workers (0: driving cam, 2: reachy head cam)
     threading.Thread(target=camera_worker, args=(0,), daemon=True).start()
     threading.Thread(target=camera_worker, args=(2,), daemon=True).start()
+    
+    # Start SO-101 status poller
+    threading.Thread(target=so_arm_poller, daemon=True).start()
     
     # Start web server
     with http.server.ThreadingHTTPServer(("", PORT), RoverHandler) as httpd:
