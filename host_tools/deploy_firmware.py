@@ -87,6 +87,8 @@ last_valid_packet_time = 0.0
 latest_channels = [1000] * 16
 sbus_active = False
 failsafe_active = False
+failsafe_count = 0
+last_flags = 0
 
 web_left_pulse = 1500
 web_right_pulse = 1500
@@ -114,14 +116,24 @@ while True:
             # Candidate packet
             packet = packet_buf[:25]
             end_byte = packet[24]
-            # S.BUS end bytes must have lower 4 bits as 0 (e.g. 0x00, 0x04, 0x14, etc.)
-            if (end_byte & 0x0F) == 0x00 or end_byte == 0x00:
+            # S.BUS end bytes must match standard Futaba S.BUS1 or S.BUS2 values
+            if end_byte in (0x00, 0x04, 0x14, 0x24, 0x34):
                 res = decode_sbus(packet)
                 if res:
                     channels, fs, fl = res
                     latest_channels = channels
                     last_valid_packet_time = now
-                    failsafe_active = fs
+                    last_flags = packet[23]
+                    if fs:
+                        failsafe_count += 1
+                    else:
+                        failsafe_count = 0
+                    
+                    # Require 10 consecutive failsafe frames (~150ms) to trigger failsafe mode
+                    if failsafe_count >= 10:
+                        failsafe_active = True
+                    else:
+                        failsafe_active = False
                 packet_buf = packet_buf[25:]
             else:
                 # Invalid end byte, discard start byte and slide
@@ -209,7 +221,7 @@ while True:
     # 9. Telemetry Printout (every 100ms)
     if (now - last_print_time) > 0.10:
         last_print_time = now
-        print(f"STAT:{mode},{left_out},{right_out},{1 if sbus_active else 0},{1 if web_active else 0},{latest_channels[0]},{latest_channels[1]},{latest_channels[4]}")
+        print(f"STAT:{mode},{left_out},{right_out},{1 if sbus_active else 0},{1 if web_active else 0},{latest_channels[0]},{latest_channels[1]},{latest_channels[4]},{last_flags}")
 """
         
         sftp = ssh.open_sftp()

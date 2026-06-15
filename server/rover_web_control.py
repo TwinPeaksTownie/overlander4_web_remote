@@ -8,11 +8,14 @@ import serial
 import os
 import cv2
 import numpy as np
+import requests
 
 PORT = 8080
 
-# Auto-detect serial port
-SERIAL_PORT = "/dev/ttyACM1" if os.path.exists("/dev/ttyACM1") else "/dev/ttyACM0"
+# Auto-detect serial port (preferring Adafruit KB2040 by ID)
+import glob
+kb_ports = glob.glob("/dev/serial/by-id/*Adafruit_KB2040*")
+SERIAL_PORT = kb_ports[0] if kb_ports else ("/dev/ttyACM0" if os.path.exists("/dev/ttyACM0") else "/dev/ttyACM1")
 
 # Global state
 lock = threading.Lock()
@@ -24,7 +27,8 @@ latest_telemetry = {
     "web_active": 0,
     "ch1": 1000,
     "ch2": 1000,
-    "ch5": 1000
+    "ch5": 1000,
+    "flags": 0
 }
 
 # Joystick target values (Y = throttle, X = steering)
@@ -32,56 +36,86 @@ joystick_x = 0.0
 joystick_y = 0.0
 last_joystick_update = 0.0
 
-# Camera state
-camera_lock = threading.Lock()
-latest_frame = None
+# Camera state for dual cameras (0: USB Driving Cam, 2: Reachy head cam)
+latest_frames = {0: None, 2: None}
+camera_locks = {0: threading.Lock(), 2: threading.Lock()}
 
 # Camera capture worker
-def camera_worker():
-    global latest_frame
-    print("Starting camera worker thread...")
-    cap = None
+def camera_worker(device_idx):
+    global latest_frames
+    name = "DRIVING CAM" if device_idx == 0 else "REACHY CAM"
+    print(f"Starting camera worker thread for /dev/video{device_idx} ({name})...")
     
-    while True:
-        try:
-            if cap is None or not cap.isOpened():
-                # Open webcam /dev/video0
-                cap = cv2.VideoCapture(0)
-                cap.set(cv2.CAP_PROP_FRAME_WIDTH, 640)
-                cap.set(cv2.CAP_PROP_FRAME_HEIGHT, 480)
-                time.sleep(1.0)
-                
-            if cap.isOpened():
-                success, frame = cap.read()
-                if success:
-                    # Compress to JPEG
-                    _, jpeg = cv2.imencode('.jpg', frame, [int(cv2.IMWRITE_JPEG_QUALITY), 60])
-                    frame_bytes = jpeg.tobytes()
-                    with camera_lock:
-                        latest_frame = frame_bytes
+    if device_idx == 2:
+        # Fetch from local Reachy Mini daemon API on port 8000 (since it holds the device open)
+        url = "http://localhost:8000/api/camera/frame"
+        while True:
+            try:
+                r = requests.get(url, timeout=1.0)
+                if r.status_code == 200:
+                    with camera_locks[2]:
+                        latest_frames[2] = r.content
                 else:
-                    print("Failed to read camera. Re-initializing...")
-                    cap.release()
-                    cap = None
-            else:
-                # Generate "Camera Offline" placeholder frame
+                    # Offline placeholder
+                    placeholder = np.zeros((480, 640, 3), dtype=np.uint8)
+                    cv2.rectangle(placeholder, (15, 15), (625, 465), (20, 20, 30), -1)
+                    cv2.rectangle(placeholder, (10, 10), (630, 470), (0, 70, 255), 1)
+                    cv2.putText(placeholder, "REACHY CAM OFFLINE", (170, 240), cv2.FONT_HERSHEY_SIMPLEX, 1.0, (0, 70, 255), 2)
+                    _, jpeg = cv2.imencode('.jpg', placeholder)
+                    with camera_locks[2]:
+                        latest_frames[2] = jpeg.tobytes()
+                    time.sleep(1.0)
+                time.sleep(0.04) # ~25 FPS
+            except Exception:
                 placeholder = np.zeros((480, 640, 3), dtype=np.uint8)
                 cv2.rectangle(placeholder, (15, 15), (625, 465), (20, 20, 30), -1)
                 cv2.rectangle(placeholder, (10, 10), (630, 470), (0, 70, 255), 1)
-                cv2.putText(placeholder, "CAMERA OFFLINE", (170, 240), cv2.FONT_HERSHEY_SIMPLEX, 1.0, (0, 70, 255), 2)
+                cv2.putText(placeholder, "REACHY CAM OFFLINE", (170, 240), cv2.FONT_HERSHEY_SIMPLEX, 1.0, (0, 70, 255), 2)
                 _, jpeg = cv2.imencode('.jpg', placeholder)
-                with camera_lock:
-                    latest_frame = jpeg.tobytes()
-                time.sleep(1.0)
+                with camera_locks[2]:
+                    latest_frames[2] = jpeg.tobytes()
+                time.sleep(2.0)
+    else:
+        # Standard OpenCV capture for USB webcam (/dev/video0)
+        cap = None
+        while True:
+            try:
+                if cap is None or not cap.isOpened():
+                    cap = cv2.VideoCapture(0)
+                    cap.set(cv2.CAP_PROP_FRAME_WIDTH, 640)
+                    cap.set(cv2.CAP_PROP_FRAME_HEIGHT, 480)
+                    time.sleep(1.0)
+                    
+                if cap.isOpened():
+                    success, frame = cap.read()
+                    if success:
+                        # Compress to JPEG
+                        _, jpeg = cv2.imencode('.jpg', frame, [int(cv2.IMWRITE_JPEG_QUALITY), 60])
+                        frame_bytes = jpeg.tobytes()
+                        with camera_locks[0]:
+                            latest_frames[0] = frame_bytes
+                    else:
+                        print(f"Failed to read camera {name}. Re-initializing...")
+                        cap.release()
+                        cap = None
+                else:
+                    placeholder = np.zeros((480, 640, 3), dtype=np.uint8)
+                    cv2.rectangle(placeholder, (15, 15), (625, 465), (20, 20, 30), -1)
+                    cv2.rectangle(placeholder, (10, 10), (630, 470), (0, 70, 255), 1)
+                    cv2.putText(placeholder, f"{name} OFFLINE", (170, 240), cv2.FONT_HERSHEY_SIMPLEX, 1.0, (0, 70, 255), 2)
+                    _, jpeg = cv2.imencode('.jpg', placeholder)
+                    with camera_locks[0]:
+                        latest_frames[0] = jpeg.tobytes()
+                    time.sleep(1.0)
+                    
+                time.sleep(0.04) # ~25 FPS
                 
-            time.sleep(0.04) # ~25 FPS
-            
-        except Exception as e:
-            print(f"Camera worker error: {e}")
-            if cap:
-                cap.release()
-                cap = None
-            time.sleep(2.0)
+            except Exception as e:
+                print(f"Camera worker error for {name}: {e}")
+                if cap:
+                    cap.release()
+                    cap = None
+                time.sleep(2.0)
 
 # Serial communication thread
 def serial_worker():
@@ -111,6 +145,7 @@ def serial_worker():
                                 latest_telemetry["ch1"] = int(parts[5])
                                 latest_telemetry["ch2"] = int(parts[6])
                                 latest_telemetry["ch5"] = int(parts[7])
+                                latest_telemetry["flags"] = int(parts[8]) if len(parts) > 8 else 0
                         except Exception as e:
                             pass
                 
@@ -372,6 +407,19 @@ HTML_PAGE = """<!DOCTYPE html>
             box-shadow: 0 0 10px rgba(255, 65, 108, 0.15);
         }
 
+        .video-grid {
+            display: grid;
+            grid-template-columns: repeat(2, 1fr);
+            gap: 1.2rem;
+            width: 100%;
+        }
+
+        @media (max-width: 768px) {
+            .video-grid {
+                grid-template-columns: 1fr;
+            }
+        }
+
         .stop-button {
             background: linear-gradient(135deg, #ff416c, #ff4b2b);
             color: white;
@@ -404,51 +452,56 @@ HTML_PAGE = """<!DOCTYPE html>
             <p class="subtitle">Unified Web Operation & Telemetry</p>
         </header>
 
-        <div class="main-grid">
-            <!-- Left Side: Video Stream & Telemetry -->
-            <div style="display: flex; flex-direction: column; gap: 1.2rem;">
-                <div class="card">
-                    <h2>Live Video Stream</h2>
-                    <div class="video-viewport">
-                        <img id="videoStream" src="/video_feed" alt="Video Stream" />
-                    </div>
+        <!-- Video Feeds Side-by-Side (Full Width) -->
+        <div class="video-grid">
+            <div class="card">
+                <h2>Driving Cam</h2>
+                <div class="video-viewport">
+                    <img id="videoStream1" src="/video_feed" alt="Driving Cam" />
                 </div>
+            </div>
+            <div class="card">
+                <h2>Reachy Cam</h2>
+                <div class="video-viewport">
+                    <img id="videoStream2" src="/video_feed2" alt="Reachy Cam" />
+                </div>
+            </div>
+        </div>
 
-                <div class="card">
-                    <h2>System Telemetry</h2>
-                    <div class="telemetry-row">
-                        <div class="indicator">
-                            <span class="indicator-label">Active Mode</span>
-                            <div id="modeVal" class="mode-badge mode-web">WEB CONTROL</div>
-                        </div>
-                        <div class="indicator">
-                            <span class="indicator-label">Transmitter Connection</span>
-                            <span id="sbusVal" class="indicator-value" style="color: var(--secondary);">ACTIVE</span>
-                        </div>
-                        <div class="indicator">
-                            <span class="indicator-label">Motor 1 Speed (Left)</span>
-                            <span id="motor1Val" class="indicator-value">1500 µs</span>
-                        </div>
-                        <div class="indicator">
-                            <span class="indicator-label">Motor 2 Speed (Right)</span>
-                            <span id="motor2Val" class="indicator-value">1500 µs</span>
-                        </div>
+        <div class="main-grid">
+            <!-- Left Side: Telemetry -->
+            <div class="card">
+                <h2>System Telemetry</h2>
+                <div class="telemetry-row">
+                    <div class="indicator">
+                        <span class="indicator-label">Active Mode</span>
+                        <div id="modeVal" class="mode-badge mode-web">WEB CONTROL</div>
+                    </div>
+                    <div class="indicator">
+                        <span class="indicator-label">Transmitter Connection</span>
+                        <span id="sbusVal" class="indicator-value" style="color: var(--secondary);">ACTIVE</span>
+                    </div>
+                    <div class="indicator">
+                        <span class="indicator-label">Motor 1 Speed (Left)</span>
+                        <span id="motor1Val" class="indicator-value">1500 µs</span>
+                    </div>
+                    <div class="indicator">
+                        <span class="indicator-label">Motor 2 Speed (Right)</span>
+                        <span id="motor2Val" class="indicator-value">1500 µs</span>
                     </div>
                 </div>
             </div>
 
             <!-- Right Side: Joystick Control & Stop -->
-            <div style="display: flex; flex-direction: column; gap: 1.2rem;">
-                <div class="card" style="flex: 1; justify-content: space-between;">
-                    <h2>Joystick Control</h2>
-                    <p class="subtitle" style="text-align: center;">Touch & drag handle to drive. Release to stop.</p>
-                    <div class="joystick-container">
-                        <div class="joystick-base" id="joyBase">
-                            <div class="joystick-handle" id="joyHandle"></div>
-                        </div>
+            <div class="card" style="justify-content: space-between;">
+                <h2>Joystick Control</h2>
+                <p class="subtitle" style="text-align: center;">Touch & drag handle to drive. Release to stop.</p>
+                <div class="joystick-container">
+                    <div class="joystick-base" id="joyBase">
+                        <div class="joystick-handle" id="joyHandle"></div>
                     </div>
-                    <button class="stop-button" onclick="emergencyStop()">Emergency Stop</button>
                 </div>
+                <button class="stop-button" onclick="emergencyStop()">Emergency Stop</button>
             </div>
         </div>
     </div>
@@ -492,11 +545,15 @@ HTML_PAGE = """<!DOCTYPE html>
         // Center the handle initially
         resetHandle();
 
+        let joystickX = 0.0;
+        let joystickY = 0.0;
+
         function resetHandle() {
             joyHandle.style.left = 'calc(50% - 35px)';
             joyHandle.style.top = 'calc(50% - 35px)';
             joyHandle.style.transform = 'translate(0px, 0px)';
-            sendDriveCommand(0, 0);
+            joystickX = 0.0;
+            joystickY = 0.0;
         }
 
         function handleStart(e) {
@@ -533,10 +590,8 @@ HTML_PAGE = """<!DOCTYPE html>
             
             // Normalize inputs to -1.0 to 1.0
             // Y is inverted (dragging up = positive throttle)
-            const xVal = dx / maxLimit;
-            const yVal = -dy / maxLimit;
-            
-            sendDriveCommand(xVal, yVal);
+            joystickX = dx / maxLimit;
+            joystickY = -dy / maxLimit;
         }
 
         function handleEnd() {
@@ -554,6 +609,11 @@ HTML_PAGE = """<!DOCTYPE html>
         joyBase.addEventListener('touchstart', handleStart);
         window.addEventListener('touchmove', handleMove);
         window.addEventListener('touchend', handleEnd);
+
+        // Periodic transmission loop (every 100ms) to prevent server-side failsafe cutouts
+        setInterval(() => {
+            sendDriveCommand(joystickX, joystickY);
+        }, 100);
 
         // Send Command to Server
         async function sendDriveCommand(x, y) {
@@ -593,7 +653,8 @@ class RoverHandler(http.server.SimpleHTTPRequestHandler):
             with lock:
                 res = json.dumps(latest_telemetry)
             self.wfile.write(res.encode('utf-8'))
-        elif self.path == "/video_feed":
+        elif self.path in ("/video_feed", "/video_feed2"):
+            device_idx = 0 if self.path == "/video_feed" else 2
             self.send_response(200)
             self.send_header('Content-type', 'multipart/x-mixed-replace; boundary=frame')
             self.end_headers()
@@ -601,8 +662,8 @@ class RoverHandler(http.server.SimpleHTTPRequestHandler):
             last_frame_sent = None
             try:
                 while True:
-                    with camera_lock:
-                        frame = latest_frame
+                    with camera_locks[device_idx]:
+                        frame = latest_frames[device_idx]
                     if frame and frame != last_frame_sent:
                         self.wfile.write(b'--frame\r\n')
                         self.wfile.write(b'Content-Type: image/jpeg\r\n\r\n')
@@ -656,8 +717,9 @@ def main():
     # Start serial worker
     threading.Thread(target=serial_worker, daemon=True).start()
     
-    # Start camera worker
-    threading.Thread(target=camera_worker, daemon=True).start()
+    # Start camera workers (0: driving cam, 2: reachy head cam)
+    threading.Thread(target=camera_worker, args=(0,), daemon=True).start()
+    threading.Thread(target=camera_worker, args=(2,), daemon=True).start()
     
     # Start web server
     with http.server.ThreadingHTTPServer(("", PORT), RoverHandler) as httpd:
