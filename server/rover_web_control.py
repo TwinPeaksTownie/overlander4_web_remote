@@ -17,6 +17,31 @@ import glob
 kb_ports = glob.glob("/dev/serial/by-id/*Adafruit_KB2040*")
 SERIAL_PORT = kb_ports[0] if kb_ports else ("/dev/ttyACM0" if os.path.exists("/dev/ttyACM0") else "/dev/ttyACM1")
 
+def detect_follower_port():
+    import os
+    ports = glob.glob("/dev/serial/by-id/*")
+    for p in ports:
+        if "Adafruit_KB2040" in p or "KB2040" in p:
+            continue
+        if "5AAF262436" in p:  # Reachy Mini serial
+            continue
+        return p
+    # Fallback to listing ttyACM/ttyUSB
+    for dev in ["/dev/ttyACM2", "/dev/ttyUSB0", "/dev/ttyACM1", "/dev/ttyACM0"]:
+        if os.path.exists(dev):
+            try:
+                real_kb = os.path.realpath(SERIAL_PORT)
+            except Exception:
+                real_kb = ""
+            try:
+                real_reachy = os.path.realpath("/dev/serial/by-id/usb-1a86_USB_Single_Serial_5AAF262436-if00")
+            except Exception:
+                real_reachy = ""
+            real_dev = os.path.realpath(dev)
+            if real_dev != real_kb and real_dev != real_reachy:
+                return dev
+    return "/dev/ttyACM2"
+
 # Global state
 lock = threading.Lock()
 latest_telemetry = {
@@ -118,7 +143,7 @@ def camera_worker(device_idx):
                     cap = None
                 time.sleep(2.0)
 
-# SO-101 arm status poller thread (runs pgrep over SSH)
+# SO-101 arm status poller thread (runs pgrep locally)
 def so_arm_poller():
     global latest_telemetry
     import subprocess
@@ -126,7 +151,7 @@ def so_arm_poller():
     while True:
         try:
             res = subprocess.run(
-                ["ssh", "-o", "ConnectTimeout=2", "user@192.168.0.38", "pgrep -f so101_host.py"],
+                ["pgrep", "-f", "so101_host.py"],
                 capture_output=True, text=True, timeout=3.0
             )
             if res.returncode == 0:
@@ -779,19 +804,12 @@ class RoverHandler(http.server.SimpleHTTPRequestHandler):
                 import subprocess
                 try:
                     if action == "start":
-                        subprocess.run(
-                            ["ssh", "-o", "ConnectTimeout=2", "user@192.168.0.38", "pkill -f so101_host.py"],
-                            timeout=3.0
-                        )
-                        subprocess.run(
-                            ["ssh", "-o", "ConnectTimeout=2", "user@192.168.0.38", "nohup /home/user/so101/.venv/bin/python /home/user/so101/so101_host.py --port /dev/ttyACM0 --id follower > /home/user/so101/host.log 2>&1 &"],
-                            timeout=3.0
-                        )
+                        subprocess.run(["pkill", "-f", "so101_host.py"], timeout=3.0)
+                        import os
+                        port = detect_follower_port()
+                        os.system(f"nohup /home/user/so101/.venv/bin/python /home/user/so101/so101_host.py --port {port} --id follower > /home/user/so101/host.log 2>&1 &")
                     elif action == "stop":
-                        subprocess.run(
-                            ["ssh", "-o", "ConnectTimeout=2", "user@192.168.0.38", "pkill -f so101_host.py"],
-                            timeout=3.0
-                        )
+                        subprocess.run(["pkill", "-f", "so101_host.py"], timeout=3.0)
                         
                     with lock:
                         latest_telemetry["so_arm_active"] = 1 if action == "start" else 0
