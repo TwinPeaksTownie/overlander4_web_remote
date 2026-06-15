@@ -64,7 +64,8 @@ latest_telemetry = {
     "ch2": 1000,
     "ch5": 1000,
     "flags": 0,
-    "so_arm_active": 2 # 0: inactive, 1: active, 2: offline
+    "so_arm_active": 2, # 0: inactive, 1: active, 2: offline
+    "reachy_daemon_active": 2 # 0: inactive, 1: active, 2: offline
 }
 
 # Joystick target values (Y = throttle, X = steering)
@@ -75,6 +76,20 @@ last_joystick_update = 0.0
 # Camera state for dual cameras (0: USB Driving Cam, 2: Reachy head cam)
 latest_frames = {0: None, 2: None}
 camera_locks = {0: threading.Lock(), 2: threading.Lock()}
+
+def find_camera_index_by_name(name_substring):
+    import os
+    try:
+        for i in range(40):
+            name_file = f"/sys/class/video4linux/video{i}/name"
+            if os.path.exists(name_file):
+                with open(name_file, "r") as f:
+                    name = f.read().strip()
+                if name_substring.lower() in name.lower():
+                    return i
+    except Exception:
+        pass
+    return None
 
 # Camera capture worker
 def camera_worker(device_idx):
@@ -112,14 +127,35 @@ def camera_worker(device_idx):
                     latest_frames[2] = jpeg.tobytes()
                 time.sleep(2.0)
     else:
-        # Standard OpenCV capture for USB webcam (/dev/video0)
+        # Standard OpenCV capture for USB webcam (Wed Camera)
         cap = None
+        last_index = None
         while True:
             try:
-                if cap is None or not cap.isOpened():
-                    cap = cv2.VideoCapture(0)
+                idx = find_camera_index_by_name("Wed Camera")
+                if idx is None:
+                    if cap is not None:
+                        cap.release()
+                        cap = None
+                    last_index = None
+                    
+                    placeholder = np.zeros((480, 640, 3), dtype=np.uint8)
+                    cv2.rectangle(placeholder, (15, 15), (625, 465), (20, 20, 30), -1)
+                    cv2.rectangle(placeholder, (10, 10), (630, 470), (0, 70, 255), 1)
+                    cv2.putText(placeholder, "DRIVING CAM OFFLINE", (170, 240), cv2.FONT_HERSHEY_SIMPLEX, 1.0, (0, 70, 255), 2)
+                    _, jpeg = cv2.imencode('.jpg', placeholder)
+                    with camera_locks[0]:
+                        latest_frames[0] = jpeg.tobytes()
+                    time.sleep(1.0)
+                    continue
+                
+                if cap is None or not cap.isOpened() or idx != last_index:
+                    if cap is not None:
+                        cap.release()
+                    cap = cv2.VideoCapture(idx)
                     cap.set(cv2.CAP_PROP_FRAME_WIDTH, 640)
                     cap.set(cv2.CAP_PROP_FRAME_HEIGHT, 480)
+                    last_index = idx
                     time.sleep(1.0)
                     
                 if cap.isOpened():
@@ -135,13 +171,6 @@ def camera_worker(device_idx):
                         cap.release()
                         cap = None
                 else:
-                    placeholder = np.zeros((480, 640, 3), dtype=np.uint8)
-                    cv2.rectangle(placeholder, (15, 15), (625, 465), (20, 20, 30), -1)
-                    cv2.rectangle(placeholder, (10, 10), (630, 470), (0, 70, 255), 1)
-                    cv2.putText(placeholder, f"{name} OFFLINE", (170, 240), cv2.FONT_HERSHEY_SIMPLEX, 1.0, (0, 70, 255), 2)
-                    _, jpeg = cv2.imencode('.jpg', placeholder)
-                    with camera_locks[0]:
-                        latest_frames[0] = jpeg.tobytes()
                     time.sleep(1.0)
                     
                 time.sleep(0.04) # ~25 FPS
@@ -175,6 +204,31 @@ def so_arm_poller():
             
         with lock:
             latest_telemetry["so_arm_active"] = status
+            
+        time.sleep(2.5)
+
+# Reachy Mini daemon status poller thread (runs pgrep locally)
+def reachy_daemon_poller():
+    global latest_telemetry
+    import subprocess
+    print("Starting Reachy daemon status poller thread...")
+    while True:
+        try:
+            res = subprocess.run(
+                ["pgrep", "-f", "reachy-mini-daemon"],
+                capture_output=True, text=True, timeout=3.0
+            )
+            if res.returncode == 0:
+                status = 1
+            elif res.returncode == 1:
+                status = 0
+            else:
+                status = 2
+        except Exception:
+            status = 2
+            
+        with lock:
+            latest_telemetry["reachy_daemon_active"] = status
             
         time.sleep(2.5)
 
@@ -499,6 +553,66 @@ HTML_PAGE = \"\"\"<!DOCTYPE html>
         .stop-button:hover {
             transform: translateY(-2px);
             box-shadow: 0 12px 20px rgba(255, 65, 108, 0.45);
+        }
+
+        /* Action Buttons */
+        .action-button {
+            flex: 1;
+            padding: 0.8rem 1.2rem;
+            border-radius: 12px;
+            border: none;
+            font-family: 'Outfit', sans-serif;
+            font-size: 0.9rem;
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+            cursor: pointer;
+            transition: all 0.2s ease;
+            box-shadow: 0 4px 10px rgba(0,0,0,0.15);
+        }
+
+        .action-button.start {
+            background: linear-gradient(135deg, var(--secondary), #00c6ff);
+            color: #080b11;
+        }
+
+        .action-button.start:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 6px 15px var(--glow-green);
+        }
+
+        .action-button.stop {
+            background: rgba(255, 65, 108, 0.15);
+            color: var(--accent);
+            border: 1px solid rgba(255, 65, 108, 0.3);
+        }
+
+        .action-button.stop:hover {
+            background: rgba(255, 65, 108, 0.25);
+            transform: translateY(-2px);
+            box-shadow: 0 6px 15px rgba(255, 65, 108, 0.2);
+        }
+
+        /* Status Badges */
+        .status-active {
+            background: rgba(0, 242, 254, 0.15);
+            color: var(--secondary);
+            border: 1px solid rgba(0, 242, 254, 0.3);
+            box-shadow: 0 0 10px rgba(0, 242, 254, 0.15);
+        }
+
+        .status-inactive {
+            background: rgba(255, 255, 255, 0.05);
+            color: rgba(255, 255, 255, 0.4);
+            border: 1px solid rgba(255, 255, 255, 0.08);
+        }
+
+        .status-offline {
+            background: rgba(255, 65, 108, 0.15);
+            color: var(--accent);
+            border: 1px solid rgba(255, 65, 108, 0.3);
+            box-shadow: 0 0 10px rgba(255, 65, 108, 0.15);
+        }
     </style>
 </head>
 <body>
@@ -560,6 +674,18 @@ HTML_PAGE = \"\"\"<!DOCTYPE html>
                         <button id="btnStopArm" class="action-button stop" onclick="controlSoArm('stop')">Stop Arm</button>
                     </div>
                 </div>
+
+                <div class="card">
+                    <h2>Reachy Mini Daemon</h2>
+                    <div style="display: flex; justify-content: space-between; align-items: center; margin-top: 0.2rem;">
+                        <span style="font-size: 0.95rem; color: rgba(255, 255, 255, 0.6);">Daemon Status:</span>
+                        <div id="reachyStatusVal" class="mode-badge status-offline">OFFLINE</div>
+                    </div>
+                    <div style="display: flex; gap: 0.8rem; margin-top: 0.5rem;">
+                        <button id="btnStartReachy" class="action-button start" onclick="controlReachyDaemon('start')">Start Daemon</button>
+                        <button id="btnStopReachy" class="action-button stop" onclick="controlReachyDaemon('stop')">Stop Daemon</button>
+                    </div>
+                </div>
             </div>
 
             <!-- Right Side: Joystick Control & Stop -->
@@ -610,6 +736,19 @@ HTML_PAGE = \"\"\"<!DOCTYPE html>
                 } else {
                     armBadge.textContent = "OFFLINE";
                     armBadge.className = "mode-badge status-offline";
+                }
+                
+                // Update Reachy Daemon status
+                const reachyBadge = document.getElementById('reachyStatusVal');
+                if (data.reachy_daemon_active === 1) {
+                    reachyBadge.textContent = "RUNNING";
+                    reachyBadge.className = "mode-badge status-active";
+                } else if (data.reachy_daemon_active === 0) {
+                    reachyBadge.textContent = "STOPPED";
+                    reachyBadge.className = "mode-badge status-inactive";
+                } else {
+                    reachyBadge.textContent = "OFFLINE";
+                    reachyBadge.className = "mode-badge status-offline";
                 }
                 
             } catch (err) {
@@ -731,6 +870,21 @@ HTML_PAGE = \"\"\"<!DOCTYPE html>
                 console.error("Failed to control SO arm", err);
             }
         }
+
+        async function controlReachyDaemon(action) {
+            try {
+                const reachyBadge = document.getElementById('reachyStatusVal');
+                reachyBadge.textContent = action === "start" ? "STARTING..." : "STOPPING...";
+                
+                await fetch('/api/reachy_daemon', {
+                    method: 'POST',
+                    headers: {'Content-Type': 'application/x-www-form-urlencoded'},
+                    body: `action=${action}`
+                });
+            } catch (err) {
+                console.error("Failed to control Reachy daemon", err);
+            }
+        }
     </script>
 </body>
 </html>
@@ -815,14 +969,71 @@ class RoverHandler(http.server.SimpleHTTPRequestHandler):
                 try:
                     if action == "start":
                         subprocess.run(["pkill", "-f", "so101_host.py"], timeout=3.0)
-                        import os
                         port = detect_follower_port()
-                        os.system(f"nohup /home/user/so101/.venv/bin/python /home/user/so101/so101_host.py --port {port} --id follower > /home/user/so101/host.log 2>&1 &")
+                        cmd = [
+                            "/home/user/so101/.venv/bin/python",
+                            "/home/user/so101/so101_host.py",
+                            "--port", port,
+                            "--id", "follower"
+                        ]
+                        log_file = open("/home/user/so101/host.log", "w")
+                        subprocess.Popen(
+                            cmd,
+                            stdout=log_file,
+                            stderr=log_file,
+                            stdin=subprocess.DEVNULL,
+                            start_new_session=True,
+                            close_fds=True
+                        )
                     elif action == "stop":
                         subprocess.run(["pkill", "-f", "so101_host.py"], timeout=3.0)
                         
                     with lock:
                         latest_telemetry["so_arm_active"] = 1 if action == "start" else 0
+                        
+                    self.send_response(200)
+                    self.send_header("Content-Type", "application/json")
+                    self.end_headers()
+                    self.wfile.write(json.dumps({"status": "ok"}).encode('utf-8'))
+                    return
+                except Exception as e:
+                    self.send_response(500)
+                    self.end_headers()
+                    self.wfile.write(str(e).encode('utf-8'))
+                    return
+            self.send_response(400)
+            self.end_headers()
+        elif self.path == "/api/reachy_daemon":
+            content_length = int(self.headers['Content-Length'])
+            post_data = self.rfile.read(content_length).decode('utf-8')
+            params = urllib.parse.parse_qs(post_data)
+            
+            if "action" in params:
+                action = params["action"][0]
+                import subprocess
+                try:
+                    if action == "start":
+                        subprocess.run(["pkill", "-f", "reachy-mini-daemon"], timeout=3.0)
+                        # Brief wait for OS to release ports
+                        time.sleep(1.0)
+                        cmd = [
+                            "/home/user/reachy/venv/bin/reachy-mini-daemon",
+                            "-p", "/dev/serial/by-id/usb-1a86_USB_Single_Serial_5AAF262436-if00"
+                        ]
+                        log_file = open("/home/user/reachy_daemon.log", "w")
+                        subprocess.Popen(
+                            cmd,
+                            stdout=log_file,
+                            stderr=log_file,
+                            stdin=subprocess.DEVNULL,
+                            start_new_session=True,
+                            close_fds=True
+                        )
+                    elif action == "stop":
+                        subprocess.run(["pkill", "-f", "reachy-mini-daemon"], timeout=3.0)
+                        
+                    with lock:
+                        latest_telemetry["reachy_daemon_active"] = 1 if action == "start" else 0
                         
                     self.send_response(200)
                     self.send_header("Content-Type", "application/json")
@@ -855,6 +1066,9 @@ def main():
     
     # Start SO-101 status poller
     threading.Thread(target=so_arm_poller, daemon=True).start()
+    
+    # Start Reachy status poller
+    threading.Thread(target=reachy_daemon_poller, daemon=True).start()
     
     # Start web server
     with http.server.ThreadingHTTPServer(("", PORT), RoverHandler) as httpd:
