@@ -251,6 +251,22 @@ class CustomHandler(http.server.SimpleHTTPRequestHandler):
             self.wfile.write(json.dumps({"status": "ok", "value": val}).encode())
             return
 
+        if path == "/api/sync_position":
+            pos = req_data.get("pos", 2503)
+            try:
+                url = "http://192.168.0.130:8085/api/sync_position"
+                data_bytes = json.dumps({"id": 8, "pos": int(pos)}).encode('utf-8')
+                req = urllib.request.Request(url, data=data_bytes, headers={'Content-Type': 'application/json'})
+                urllib.request.urlopen(req, timeout=1.5)
+            except Exception:
+                pass
+
+            self.send_response(200)
+            self.send_header("Content-Type", "application/json")
+            self.end_headers()
+            self.wfile.write(json.dumps({"status": "ok", "synced_pos": pos}).encode())
+            return
+
         self.send_response(404)
         self.end_headers()
 
