@@ -354,26 +354,34 @@
                         <span id="sliderValDisplay" class="tick-val">2503 ticks</span>
                     </div>
 
-                    <div style="margin: 8px 0;">
+                    <div style="margin: 6px 0;">
                         <input type="range" id="sliderRangeInput" min="3" max="4800" value="2503" step="10" 
                                style="color: var(--yellow-accent);" oninput="onSliderMove(this.value)" onchange="sendSliderMove(this.value)">
                     </div>
 
+                    <!-- Step Nudge Taps -->
+                    <div style="display: grid; grid-template-columns: repeat(4, 1fr); gap: 4px; margin-top: 2px;">
+                        <button class="btn-touch btn-yellow" style="padding: 6px 2px; min-height: 40px; font-size: 11px;" onclick="nudgeSlider(-50)">◀ -50</button>
+                        <button class="btn-touch btn-yellow" style="padding: 6px 2px; min-height: 40px; font-size: 11px;" onclick="nudgeSlider(-10)">◀ -10</button>
+                        <button class="btn-touch btn-yellow" style="padding: 6px 2px; min-height: 40px; font-size: 11px;" onclick="nudgeSlider(10)">+10 ▶</button>
+                        <button class="btn-touch btn-yellow" style="padding: 6px 2px; min-height: 40px; font-size: 11px;" onclick="nudgeSlider(50)">+50 ▶</button>
+                    </div>
+
                     <!-- Large Presets -->
-                    <div style="display: grid; grid-template-columns: repeat(3, 1fr); gap: 6px; margin-top: 4px;">
-                        <button class="btn-touch btn-yellow" onclick="setSliderPreset(3)">LEFT (3)</button>
-                        <button class="btn-touch btn-yellow" onclick="setSliderPreset(2503)">CENTER (2503)</button>
-                        <button class="btn-touch btn-yellow" onclick="setSliderPreset(4800)">RIGHT (4800)</button>
+                    <div style="display: grid; grid-template-columns: repeat(3, 1fr); gap: 4px; margin-top: 4px;">
+                        <button class="btn-touch btn-yellow" style="min-height: 40px; font-size: 11px;" onclick="setSliderPreset(3)">LEFT (3)</button>
+                        <button class="btn-touch btn-yellow" style="min-height: 40px; font-size: 11px;" onclick="setSliderPreset(2503)">CENTER (2503)</button>
+                        <button class="btn-touch btn-yellow" style="min-height: 40px; font-size: 11px;" onclick="setSliderPreset(4800)">RIGHT (4800)</button>
                     </div>
 
                     <!-- Hard-Stop Re-Sync Panel -->
-                    <div style="margin-top: 10px; background: rgba(0,0,0,0.3); border: 1.5px solid var(--orange-accent); border-radius: 10px; padding: 8px;">
-                        <div style="font-size: 11px; font-weight: 800; color: var(--orange-accent); margin-bottom: 6px; text-align: center;">
+                    <div style="margin-top: 6px; background: rgba(0,0,0,0.3); border: 1.5px solid var(--orange-accent); border-radius: 8px; padding: 6px;">
+                        <div style="font-size: 10px; font-weight: 800; color: var(--orange-accent); margin-bottom: 4px; text-align: center;">
                             🛠️ RE-SYNC TO PHYSICAL HARD STOP
                         </div>
-                        <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 6px;">
-                            <button class="btn-touch btn-orange" onclick="syncGantryLeft()">🛠️ SYNC LEFT (3)</button>
-                            <button class="btn-touch btn-orange" onclick="syncGantryRight()">🛠️ SYNC RIGHT (4800)</button>
+                        <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 4px;">
+                            <button class="btn-touch btn-orange" style="min-height: 38px; font-size: 11px;" onclick="syncGantryLeft()">🛠️ SYNC LEFT (3)</button>
+                            <button class="btn-touch btn-orange" style="min-height: 38px; font-size: 11px;" onclick="syncGantryRight()">🛠️ SYNC RIGHT (4800)</button>
                         </div>
                     </div>
                 </div>
@@ -385,26 +393,34 @@
                         <span id="pedestalValDisplay" class="tick-val">2048 ticks (0°)</span>
                     </div>
 
-                    <div style="margin: 8px 0;">
+                    <div style="margin: 6px 0;">
                         <input type="range" id="pedestalRangeInput" min="0" max="4095" value="2048" step="10" 
                                style="color: var(--cyan-accent);" oninput="onPedestalMove(this.value)" onchange="sendPedestalMove(this.value)">
                     </div>
 
+                    <!-- Step Nudge Taps -->
+                    <div style="display: grid; grid-template-columns: repeat(4, 1fr); gap: 4px; margin-top: 2px;">
+                        <button class="btn-touch btn-cyan" style="padding: 6px 2px; min-height: 40px; font-size: 11px;" onclick="nudgePedestal(-57)">◀ -5°</button>
+                        <button class="btn-touch btn-cyan" style="padding: 6px 2px; min-height: 40px; font-size: 11px;" onclick="nudgePedestal(-11)">◀ -1°</button>
+                        <button class="btn-touch btn-cyan" style="padding: 6px 2px; min-height: 40px; font-size: 11px;" onclick="nudgePedestal(11)">+1° ▶</button>
+                        <button class="btn-touch btn-cyan" style="padding: 6px 2px; min-height: 40px; font-size: 11px;" onclick="nudgePedestal(57)">+5° ▶</button>
+                    </div>
+
                     <!-- Large Presets -->
-                    <div style="display: grid; grid-template-columns: repeat(3, 1fr); gap: 6px; margin-top: 4px;">
-                        <button class="btn-touch btn-cyan" onclick="setPedestalPreset(1024)">-90° (1024)</button>
-                        <button class="btn-touch btn-cyan" onclick="setPedestalPreset(2048)">0° FRONT (2048)</button>
-                        <button class="btn-touch btn-cyan" onclick="setPedestalPreset(3072)">+90° (3072)</button>
+                    <div style="display: grid; grid-template-columns: repeat(3, 1fr); gap: 4px; margin-top: 4px;">
+                        <button class="btn-touch btn-cyan" style="min-height: 40px; font-size: 11px;" onclick="setPedestalPreset(1024)">-90° (1024)</button>
+                        <button class="btn-touch btn-cyan" style="min-height: 40px; font-size: 11px;" onclick="setPedestalPreset(2048)">0° FRONT (2048)</button>
+                        <button class="btn-touch btn-cyan" style="min-height: 40px; font-size: 11px;" onclick="setPedestalPreset(3072)">+90° (3072)</button>
                     </div>
 
                     <!-- Diagnostic Quick Action -->
-                    <div style="margin-top: 10px; background: rgba(0,0,0,0.3); border: 1.5px solid var(--cyan-accent); border-radius: 10px; padding: 8px;">
-                        <div style="font-size: 11px; font-weight: 800; color: var(--cyan-accent); margin-bottom: 6px; text-align: center;">
+                    <div style="margin-top: 6px; background: rgba(0,0,0,0.3); border: 1.5px solid var(--cyan-accent); border-radius: 8px; padding: 6px;">
+                        <div style="font-size: 10px; font-weight: 800; color: var(--cyan-accent); margin-bottom: 4px; text-align: center;">
                             🔄 PEDESTAL DIRECT ANGLE NUDGE
                         </div>
-                        <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 6px;">
-                            <button class="btn-touch btn-cyan" onclick="setPedestalPreset(1536)">-45° (1536)</button>
-                            <button class="btn-touch btn-cyan" onclick="setPedestalPreset(2560)">+45° (2560)</button>
+                        <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 4px;">
+                            <button class="btn-touch btn-cyan" style="min-height: 38px; font-size: 11px;" onclick="setPedestalPreset(1536)">-45° (1536)</button>
+                            <button class="btn-touch btn-cyan" style="min-height: 38px; font-size: 11px;" onclick="setPedestalPreset(2560)">+45° (2560)</button>
                         </div>
                     </div>
                 </div>
@@ -576,6 +592,22 @@
         function setSliderPreset(val) {
             document.getElementById('sliderRangeInput').value = val;
             sendSliderMove(val);
+        }
+
+        function nudgeSlider(delta) {
+            const input = document.getElementById('sliderRangeInput');
+            let newVal = parseInt(input.value) + delta;
+            newVal = Math.max(3, Math.min(4800, newVal));
+            input.value = newVal;
+            sendSliderMove(newVal);
+        }
+
+        function nudgePedestal(delta) {
+            const input = document.getElementById('pedestalRangeInput');
+            let newVal = parseInt(input.value) + delta;
+            newVal = Math.max(0, Math.min(4095, newVal));
+            input.value = newVal;
+            sendPedestalMove(newVal);
         }
 
         function syncGantryLeft() {
