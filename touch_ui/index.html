@@ -22,68 +22,94 @@
             height: 100vh;
             overflow: hidden;
             display: flex;
+            padding: 0;
+        }
+
+        /* Left Navigation Rail (120px Wide, 480px Full Height) */
+        .left-rail {
+            width: 130px;
+            height: 100vh;
+            background: #0d0d0d;
+            border-right: 3px solid #222222;
+            display: flex;
+            flex-direction: column;
+            gap: 6px;
+            padding: 6px;
+            flex-shrink: 0;
+        }
+
+        .rail-btn {
+            flex: 1;
+            background: #181818;
+            border: 2px solid #333333;
+            color: #888888;
+            font-size: 15px;
+            font-weight: 900;
+            border-radius: 8px;
+            cursor: pointer;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            text-align: center;
+            gap: 4px;
+        }
+
+        .rail-btn.active {
+            background: #00e5ff;
+            color: #000000;
+            border-color: #00e5ff;
+        }
+
+        /* Main Workspace (670px Wide x 480px Tall) */
+        .workspace {
+            flex-grow: 1;
+            height: 100vh;
+            display: flex;
             flex-direction: column;
             padding: 10px;
             gap: 10px;
         }
 
-        /* Top Header Readout */
-        .header-bar {
-            height: 44px;
+        .tab-panel {
+            display: none;
+            width: 100%;
+            height: 100%;
+            flex-direction: column;
+            gap: 10px;
+        }
+
+        .tab-panel.active {
             display: flex;
-            align-items: center;
-            justify-content: space-between;
-            padding: 0 12px;
+        }
+
+        /* Top Header Readout Bar */
+        .header-bar {
+            height: 48px;
             background: #111111;
             border: 2px solid #333333;
             border-radius: 8px;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            padding: 0 14px;
             flex-shrink: 0;
         }
 
-        .title {
+        .header-title {
             font-size: 16px;
             font-weight: 900;
             color: #00e5ff;
         }
 
-        .readout {
+        .header-readout {
             font-family: monospace;
-            font-size: 22px;
+            font-size: 24px;
             font-weight: 900;
             color: #f8d800;
         }
 
-        /* Large Range Slider Track */
-        .slider-box {
-            height: 54px;
-            background: #111111;
-            border: 2px solid #333333;
-            border-radius: 8px;
-            padding: 6px 12px;
-            display: flex;
-            align-items: center;
-            flex-shrink: 0;
-        }
-
-        input[type="range"] {
-            -webkit-appearance: none;
-            width: 100%;
-            height: 40px;
-            border-radius: 6px;
-            background: #222222;
-            outline: none;
-        }
-
-        input[type="range"]::-webkit-slider-thumb {
-            -webkit-appearance: none;
-            width: 48px;
-            height: 48px;
-            border-radius: 6px;
-            background: #f8d800;
-            cursor: pointer;
-        }
-
-        /* Massive Giant Touch Buttons Grid */
+        /* Massive 130px+ Tall Action Grid */
         .giant-grid {
             display: grid;
             grid-template-columns: 1fr 1fr;
@@ -91,11 +117,11 @@
             flex-grow: 1;
         }
 
-        .btn-giant {
-            background: #1a1a1a;
+        .btn-action {
+            background: #181818;
             border: 3px solid #444444;
             color: #ffffff;
-            font-size: 20px;
+            font-size: 22px;
             font-weight: 900;
             border-radius: 12px;
             cursor: pointer;
@@ -103,11 +129,11 @@
             align-items: center;
             justify-content: center;
             text-align: center;
-            padding: 10px;
+            padding: 12px;
             line-height: 1.2;
         }
 
-        .btn-giant:active {
+        .btn-action:active {
             background: #00e5ff;
             color: #000000;
             border-color: #00e5ff;
@@ -116,44 +142,115 @@
         .btn-orange {
             border-color: #ff9900;
             color: #ff9900;
-            background: #221500;
+            background: #1e1200;
         }
 
         .btn-orange:active {
             background: #ff9900;
             color: #000000;
         }
+
+        .btn-red {
+            border-color: #ff3344;
+            color: #ff3344;
+            background: #220000;
+        }
+
+        .btn-red:active {
+            background: #ff3344;
+            color: #ffffff;
+        }
     </style>
 </head>
 <body>
 
-    <!-- Simple Header Readout -->
-    <div class="header-bar">
-        <div class="title">↔️ LESLIDE CARRIAGE (MOTOR 8)</div>
-        <div id="sliderValDisplay" class="readout">2503 ticks</div>
+    <!-- Left Vertical Navigation Rail (130px Wide x 480px Tall) -->
+    <div class="left-rail">
+        <button id="railBtnGantry" class="rail-btn active" onclick="switchTab('gantry')">
+            <span style="font-size: 24px;">⚙️</span>
+            <span>GANTRY</span>
+        </button>
+
+        <button id="railBtnControls" class="rail-btn" onclick="switchTab('controls')">
+            <span style="font-size: 24px;">🦾</span>
+            <span>TELEOP</span>
+        </button>
+
+        <button id="railBtnPower" class="rail-btn" onclick="switchTab('power')">
+            <span style="font-size: 24px;">⚡</span>
+            <span>POWER</span>
+        </button>
     </div>
 
-    <!-- Full-Width Coarse Slider -->
-    <div class="slider-box">
-        <input type="range" id="sliderRangeInput" min="3" max="4800" value="2503" step="10" 
-               oninput="onSliderMove(this.value)" onchange="sendSliderMove(this.value)">
-    </div>
+    <!-- Main Unobstructed Workspace -->
+    <div class="workspace">
 
-    <!-- 4 MASSIVE 75px+ TALL TOUCH BUTTONS -->
-    <div class="giant-grid">
-        <button class="btn-giant" onclick="nudgeSlider(-50)">◀ NUDGE LEFT<br>(-50 TICKS)</button>
-        <button class="btn-giant" onclick="nudgeSlider(50)">NUDGE RIGHT ▶<br>(+50 TICKS)</button>
+        <!-- TAB 1: ⚙️ GANTRY SLIDE (Motor 8 Stepper) -->
+        <div id="panelGantry" class="tab-panel active">
+            <div class="header-bar">
+                <div class="header-title">LESLIDE CARRIAGE (MOTOR 8)</div>
+                <div id="sliderValDisplay" class="header-readout">2503 ticks</div>
+            </div>
 
-        <button class="btn-giant btn-orange" onclick="syncGantryLeft()">🛑 SYNC LEFT<br>HARD STOP (3)</button>
-        <button class="btn-giant btn-orange" onclick="syncGantryRight()">🛑 SYNC RIGHT<br>HARD STOP (4800)</button>
+            <div class="giant-grid">
+                <button class="btn-action" onclick="nudgeSlider(-5)">◀ STEP LEFT<br>(-5 TICKS)</button>
+                <button class="btn-action" onclick="nudgeSlider(5)">STEP RIGHT ▶<br>(+5 TICKS)</button>
+
+                <button class="btn-action btn-orange" onclick="syncGantryLeft()">🛑 SYNC LEFT<br>HARD STOP (3)</button>
+                <button class="btn-action btn-orange" onclick="syncGantryRight()">🛑 SYNC RIGHT<br>HARD STOP (4800)</button>
+            </div>
+        </div>
+
+        <!-- TAB 2: 🦾 TELEOP CONTROLLERS -->
+        <div id="panelControls" class="tab-panel">
+            <div class="header-bar">
+                <div class="header-title">TELEOPERATION CONTROLLERS</div>
+                <div id="teleopStatus" class="header-readout" style="font-size: 16px; color: #00ff66;">READY</div>
+            </div>
+
+            <div class="giant-grid" style="grid-template-columns: repeat(3, 1fr);">
+                <button id="leaderBtn" class="btn-action" onclick="toggleMacLeader()">🍎<br>START LEADER</button>
+                <button id="followerBtn" class="btn-action" onclick="togglePi500Follower()">🦾<br>START FOLLOWER</button>
+                <button id="pokeballBtn" class="btn-action btn-red" onclick="togglePokeballTeleop()">🔴<br>CONNECT POKÉBALL</button>
+            </div>
+        </div>
+
+        <!-- TAB 3: ⚡ POWER & TOOLS -->
+        <div id="panelPower" class="tab-panel">
+            <div class="header-bar">
+                <div class="header-title">SYSTEM POWER & DIAGNOSTICS</div>
+                <div id="powerStatus" class="header-readout" style="font-size: 16px; color: #00ff66;">PI 500 ONLINE</div>
+            </div>
+
+            <div class="giant-grid">
+                <button class="btn-action btn-red" onclick="triggerPi500PowerOn()">⚡ WAKE PI 500<br>(WAKE-ON-LAN)</button>
+                <button class="btn-action" onclick="window.location.href='/calibration.html'">🎯 RECALIBRATE<br>TOUCHSCREEN</button>
+            </div>
+        </div>
+
     </div>
 
     <script>
-        function onSliderMove(val) {
-            document.getElementById('sliderValDisplay').innerText = val + ' ticks';
+        let currentPos = 2503;
+
+        function switchTab(tabId) {
+            document.querySelectorAll('.rail-btn').forEach(btn => btn.classList.remove('active'));
+            document.querySelectorAll('.tab-panel').forEach(p => p.classList.remove('active'));
+
+            if (tabId === 'gantry') {
+                document.getElementById('railBtnGantry').classList.add('active');
+                document.getElementById('panelGantry').classList.add('active');
+            } else if (tabId === 'controls') {
+                document.getElementById('railBtnControls').classList.add('active');
+                document.getElementById('panelControls').classList.add('active');
+            } else if (tabId === 'power') {
+                document.getElementById('railBtnPower').classList.add('active');
+                document.getElementById('panelPower').classList.add('active');
+            }
         }
 
         function sendSliderMove(val) {
+            currentPos = val;
             document.getElementById('sliderValDisplay').innerText = val + ' ticks';
             fetch('/api/slider', {
                 method: 'POST',
@@ -163,15 +260,13 @@
         }
 
         function nudgeSlider(delta) {
-            const input = document.getElementById('sliderRangeInput');
-            let newVal = parseInt(input.value) + delta;
+            let newVal = currentPos + delta;
             newVal = Math.max(3, Math.min(4800, newVal));
-            input.value = newVal;
             sendSliderMove(newVal);
         }
 
         function syncGantryLeft() {
-            document.getElementById('sliderRangeInput').value = 3;
+            currentPos = 3;
             document.getElementById('sliderValDisplay').innerText = '3 ticks (LEFT SYNCED)';
             fetch('/api/sync_position', {
                 method: 'POST',
@@ -181,13 +276,48 @@
         }
 
         function syncGantryRight() {
-            document.getElementById('sliderRangeInput').value = 4800;
+            currentPos = 4800;
             document.getElementById('sliderValDisplay').innerText = '4800 ticks (RIGHT SYNCED)';
             fetch('/api/sync_position', {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
                 body: JSON.stringify({ pos: 4800 })
             });
+        }
+
+        let isLeaderRunning = false;
+        let isFollowerRunning = false;
+        let isPokeballRunning = false;
+
+        function toggleMacLeader() {
+            const action = isLeaderRunning ? 'stop' : 'start';
+            fetch('/api/mac_leader_toggle', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ action: action })
+            });
+        }
+
+        function togglePi500Follower() {
+            const action = isFollowerRunning ? 'stop' : 'start';
+            fetch('/api/pi500_follower_toggle', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ action: action })
+            });
+        }
+
+        function togglePokeballTeleop() {
+            const action = isPokeballRunning ? 'stop' : 'start';
+            fetch('/api/pokeball_teleop_toggle', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ action: action })
+            });
+        }
+
+        function triggerPi500PowerOn() {
+            fetch('/api/pi500_poweron', { method: 'POST' });
         }
     </script>
 </body>
