@@ -372,7 +372,7 @@
                             <button class="wifi-btn" style="flex: 1; padding: 6px; min-height: 32px; font-size: 10px;" onclick="setSliderPreset(4800)">RIGHT (4800)</button>
                         </div>
                         <div style="display: flex; gap: 6px; margin-top: 6px;">
-                            <button class="wifi-btn" style="background: #ff9900; color: #000; flex: 1; padding: 4px; min-height: 28px; font-size: 10px;" onclick="syncGantryCenter()">🛠️ RE-SYNC CENTER (2503)</button>
+                            <button class="wifi-btn" style="background: #ff9900; color: #000; flex: 1; padding: 4px; min-height: 28px; font-size: 10px;" onclick="syncGantryLeft()">🛠️ RE-SYNC LEFT STOP (3)</button>
                         </div>
                     </div>
 
@@ -573,13 +573,13 @@
             sendSliderMove(val);
         }
 
-        function syncGantryCenter() {
-            document.getElementById('sliderRangeInput').value = 2503;
-            document.getElementById('sliderValDisplay').innerText = '2503 ticks (CENTER SYNCED)';
+        function syncGantryLeft() {
+            document.getElementById('sliderRangeInput').value = 3;
+            document.getElementById('sliderValDisplay').innerText = '3 ticks (LEFT STOP SYNCED)';
             fetch('/api/sync_position', {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({ pos: 2503 })
+                body: JSON.stringify({ pos: 3 })
             });
         }
 
