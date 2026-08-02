@@ -9,9 +9,9 @@
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@500;700;900&family=Outfit:wght@600;800;900&display=swap" rel="stylesheet">
     <style>
         :root {
-            --bg-dark: #0a0e17;
-            --card-bg: rgba(18, 26, 42, 0.85);
-            --card-border: rgba(255, 255, 255, 0.12);
+            --bg-dark: #090d16;
+            --card-bg: #121927;
+            --card-border: rgba(255, 255, 255, 0.1);
             --cyan-accent: #00e5ff;
             --yellow-accent: #f8d800;
             --green-accent: #10b981;
@@ -33,9 +33,6 @@
         body {
             font-family: 'Inter', sans-serif;
             background: var(--bg-dark);
-            background-image: 
-                radial-gradient(at 15% 15%, rgba(0, 229, 255, 0.08) 0px, transparent 50%),
-                radial-gradient(at 85% 85%, rgba(248, 216, 0, 0.06) 0px, transparent 50%);
             color: var(--text-main);
             width: 100vw;
             height: 100vh;
@@ -48,11 +45,10 @@
 
         /* Fixed Top Navigation Bar */
         .top-navbar {
-            height: 52px;
-            background: rgba(22, 30, 48, 0.95);
-            backdrop-filter: blur(16px);
-            border: 2px solid var(--card-border);
-            border-radius: 12px;
+            height: 50px;
+            background: #141c2d;
+            border: 1.5px solid var(--card-border);
+            border-radius: 10px;
             display: flex;
             align-items: center;
             justify-content: space-between;
@@ -62,10 +58,10 @@
 
         .brand-title {
             font-family: 'Outfit', sans-serif;
-            font-size: 16px;
+            font-size: 15px;
             font-weight: 900;
             color: var(--cyan-accent);
-            letter-spacing: 1px;
+            letter-spacing: 0.5px;
             display: flex;
             align-items: center;
             gap: 8px;
@@ -74,10 +70,10 @@
         /* Tab Switcher Pills */
         .tab-switcher {
             display: flex;
-            gap: 6px;
-            background: rgba(0, 0, 0, 0.4);
-            padding: 4px;
-            border-radius: 24px;
+            gap: 4px;
+            background: rgba(0, 0, 0, 0.5);
+            padding: 3px;
+            border-radius: 20px;
             border: 1px solid var(--card-border);
         }
 
@@ -86,25 +82,25 @@
             border: none;
             color: var(--text-muted);
             font-family: 'Outfit', sans-serif;
-            font-size: 13px;
+            font-size: 12px;
             font-weight: 800;
-            padding: 8px 16px;
-            border-radius: 18px;
+            padding: 6px 14px;
+            border-radius: 16px;
             cursor: pointer;
-            transition: all 0.2s ease;
+            transition: all 0.15s ease;
         }
 
         .tab-btn.active {
             background: var(--cyan-accent);
             color: #000000;
-            box-shadow: 0 0 14px rgba(0, 229, 255, 0.4);
+            box-shadow: 0 0 12px rgba(0, 229, 255, 0.3);
         }
 
         .status-badge {
-            font-size: 12px;
+            font-size: 11px;
             font-weight: 800;
-            padding: 6px 14px;
-            border-radius: 20px;
+            padding: 5px 12px;
+            border-radius: 16px;
             background: rgba(16, 185, 129, 0.2);
             border: 1.5px solid var(--green-accent);
             color: var(--green-accent);
@@ -119,14 +115,14 @@
             color: var(--red-accent);
         }
 
-        .status-dot { width: 8px; height: 8px; border-radius: 50%; background: currentColor; }
+        .status-dot { width: 7px; height: 7px; border-radius: 50%; background: currentColor; }
 
         /* Main View Container */
         .view-container {
             flex-grow: 1;
             position: relative;
             width: 100%;
-            height: calc(100vh - 76px);
+            height: calc(100vh - 74px);
         }
 
         .tab-content {
@@ -144,19 +140,18 @@
         /* Glassmorphic Cards */
         .card {
             background: var(--card-bg);
-            border: 2px solid var(--card-border);
-            border-radius: 14px;
-            padding: 12px;
+            border: 1.5px solid var(--card-border);
+            border-radius: 12px;
+            padding: 10px 14px;
             display: flex;
             flex-direction: column;
         }
 
-        .card-header {
+        .card-title {
             font-family: 'Outfit', sans-serif;
-            font-size: 14px;
+            font-size: 13px;
             font-weight: 900;
-            color: var(--cyan-accent);
-            margin-bottom: 8px;
+            color: var(--text-muted);
             display: flex;
             justify-content: space-between;
             align-items: center;
@@ -171,66 +166,93 @@
         }
 
         .arm-tile {
-            background: rgba(24, 40, 52, 0.8);
-            border: 3px solid var(--cyan-accent);
-            border-radius: 14px;
+            background: #182234;
+            border: 2.5px solid var(--cyan-accent);
+            border-radius: 12px;
             display: flex;
             flex-direction: column;
             align-items: center;
             justify-content: center;
-            padding: 14px 8px;
+            padding: 12px 6px;
             cursor: pointer;
-            box-shadow: 0 4px #006680;
+            box-shadow: 0 4px #0a111c;
             transition: all 0.15s ease;
-            gap: 12px;
+            gap: 10px;
             text-align: center;
             color: var(--text-main);
         }
 
-        .arm-tile:active { transform: translateY(3px); box-shadow: 0 1px #006680; }
-        .arm-tile.leader-tile { border-color: var(--cyan-accent); box-shadow: 0 4px #0088cc; }
-        .arm-tile.follower-tile { border-color: #00ff66; box-shadow: 0 4px #009933; }
-        .arm-tile.pokeball-tile { border-color: var(--red-accent); box-shadow: 0 4px #990011; }
+        .arm-tile:active { transform: translateY(2px); box-shadow: 0 1px #0a111c; }
+        .arm-tile.leader-tile { border-color: var(--cyan-accent); }
+        .arm-tile.follower-tile { border-color: #00ff66; }
+        .arm-tile.pokeball-tile { border-color: var(--red-accent); }
 
-        .arm-tile.running-leader { background: var(--cyan-accent) !important; color: #000 !important; box-shadow: 0 0 18px var(--cyan-accent) !important; }
-        .arm-tile.running-follower { background: #00ff66 !important; color: #000 !important; box-shadow: 0 0 18px #00ff66 !important; }
-        .arm-tile.running-pokeball { background: #ffffff !important; color: #111 !important; box-shadow: 0 0 20px #ffffff !important; }
+        .arm-tile.running-leader { background: var(--cyan-accent) !important; color: #000 !important; }
+        .arm-tile.running-follower { background: #00ff66 !important; color: #000 !important; }
+        .arm-tile.running-pokeball { background: #ffffff !important; color: #111 !important; }
 
         .tile-icon { font-size: 36px; line-height: 1; pointer-events: none; }
-        .tile-label { font-family: 'Outfit', sans-serif; font-size: 13px; font-weight: 900; letter-spacing: 0.5px; }
+        .tile-label { font-family: 'Outfit', sans-serif; font-size: 12px; font-weight: 900; }
 
-        /* Buttons & Touch Targets */
-        .btn-touch {
-            background: rgba(255, 255, 255, 0.08);
-            border: 2px solid rgba(255, 255, 255, 0.18);
+        /* Minimalist Action Buttons */
+        .btn-act {
+            background: #1e293b;
+            border: 1.5px solid var(--card-border);
             color: var(--text-main);
             font-family: 'Outfit', sans-serif;
             font-size: 12px;
             font-weight: 900;
-            padding: 10px 6px;
-            min-height: 46px;
-            border-radius: 10px;
+            padding: 8px 12px;
+            min-height: 44px;
+            border-radius: 8px;
             cursor: pointer;
             display: flex;
             align-items: center;
             justify-content: center;
-            text-align: center;
-            box-shadow: 0 3px rgba(0, 0, 0, 0.4);
-            transition: all 0.15s ease;
+            gap: 4px;
+            box-shadow: 0 2px rgba(0, 0, 0, 0.4);
+            transition: all 0.12s ease;
         }
 
-        .btn-touch:active { transform: translateY(2px); box-shadow: 0 1px rgba(0, 0, 0, 0.4); }
-        .btn-yellow { background: var(--yellow-accent); color: #000000; border-color: #ffd700; box-shadow: 0 3px #998000; }
-        .btn-cyan { background: var(--cyan-accent); color: #000000; border-color: #00bfff; box-shadow: 0 3px #0088cc; }
-        .btn-orange { background: var(--orange-accent); color: #000000; border-color: #ff8800; box-shadow: 0 3px #cc7a00; }
+        .btn-act:active { transform: translateY(1px); box-shadow: none; }
+        .btn-yellow-outline { border-color: var(--yellow-accent); color: var(--yellow-accent); }
+        .btn-cyan-outline { border-color: var(--cyan-accent); color: var(--cyan-accent); }
+        .btn-orange-solid { background: var(--orange-accent); color: #000000; border: none; }
 
-        /* Range Slider Styling */
+        /* Clean Horizontal Slider Control Bar */
+        .nudge-bar {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            margin: 8px 0;
+        }
+
+        .nudge-btn {
+            background: #1e293b;
+            border: 1.5px solid var(--card-border);
+            color: var(--text-main);
+            font-family: 'Outfit', monospace;
+            font-size: 12px;
+            font-weight: 900;
+            min-width: 52px;
+            height: 42px;
+            border-radius: 8px;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            flex-shrink: 0;
+        }
+
+        .nudge-btn:active { background: var(--cyan-accent); color: #000000; }
+
         input[type="range"] {
             -webkit-appearance: none;
-            width: 100%;
-            height: 38px;
-            border-radius: 8px;
-            background: rgba(255, 255, 255, 0.1);
+            flex-grow: 1;
+            height: 36px;
+            border-radius: 6px;
+            background: #0f172a;
+            border: 1px solid var(--card-border);
             outline: none;
         }
 
@@ -241,47 +263,33 @@
             border-radius: 50%;
             background: currentColor;
             cursor: pointer;
-            box-shadow: 0 0 12px currentColor;
         }
 
-        .tick-val {
+        .tick-display {
             font-family: 'Outfit', monospace;
-            font-size: 20px;
+            font-size: 18px;
             font-weight: 900;
-            background: rgba(0, 0, 0, 0.4);
-            border: 1px solid var(--card-border);
-            padding: 2px 10px;
-            border-radius: 6px;
             color: #ffffff;
         }
 
         /* Power Tile */
         .power-tile-large {
             background: linear-gradient(135deg, #7f1d1d, #991b1b);
-            border: 3px solid var(--red-accent);
-            border-radius: 16px;
-            padding: 24px;
+            border: 2px solid var(--red-accent);
+            border-radius: 12px;
+            padding: 20px;
             display: flex;
             flex-direction: column;
             align-items: center;
             justify-content: center;
-            gap: 12px;
+            gap: 10px;
             cursor: pointer;
             flex-grow: 1;
-            box-shadow: 0 0 20px rgba(255, 51, 68, 0.5);
-            animation: pulse-power 1.5s infinite alternate;
         }
 
         .power-tile-large.online {
             background: linear-gradient(135deg, #065f46, #047857);
             border-color: var(--green-accent);
-            box-shadow: 0 0 16px rgba(16, 185, 129, 0.4);
-            animation: none;
-        }
-
-        @keyframes pulse-power {
-            0% { box-shadow: 0 0 10px rgba(255, 51, 68, 0.4); }
-            100% { box-shadow: 0 0 26px rgba(255, 51, 68, 0.9); }
         }
     </style>
 </head>
@@ -311,10 +319,10 @@
         <!-- TAB 1: 🦾 CONTROLS (Arm & Teleop Systems) -->
         <div id="tabContentControls" class="tab-content active">
             <div class="card" style="flex-grow: 1;">
-                <div class="card-header">
-                    <span>🦾 TELEOPERATION SYSTEM CONTROLLERS</span>
+                <div class="card-title">
+                    <span>🦾 TELEOPERATION CONTROLLERS</span>
                 </div>
-                <div class="teleop-grid">
+                <div class="teleop-grid" style="margin-top: 8px;">
                     <div id="leaderTile" class="arm-tile leader-tile" onclick="toggleMacLeader()">
                         <div id="leaderIcon" class="tile-icon">🍎</div>
                         <div id="leaderText" class="tile-label">START LEADER</div>
@@ -332,100 +340,71 @@
                 </div>
             </div>
 
-            <div class="card" style="height: 70px;">
-                <div class="card-header" style="margin-bottom: 4px;">
-                    <span>📡 WI-FI HOTSPOT FINDER</span>
-                </div>
-                <div style="display: flex; gap: 10px; align-items: center;">
-                    <button class="btn-touch btn-yellow" style="width: 140px; min-height: 38px;" onclick="scanWifi()">SCAN HOTSPOT</button>
-                    <span id="wifiInfo" style="font-size: 12px; color: var(--text-muted);">Tap scan to detect Wi-Fi networks...</span>
+            <div class="card" style="height: 64px; justify-content: center;">
+                <div style="display: flex; gap: 10px; align-items: center; justify-content: space-between;">
+                    <span id="wifiInfo" style="font-size: 12px; color: var(--text-muted);">Wi-Fi Hotspot status standby...</span>
+                    <button class="btn-act btn-yellow-outline" style="min-height: 38px; padding: 0 16px;" onclick="scanWifi()">📡 SCAN HOTSPOT</button>
                 </div>
             </div>
         </div>
 
-        <!-- TAB 2: ⚙️ GANTRY & SPINNER (Rail & Rotating Base) -->
+        <!-- TAB 2: ⚙️ GANTRY & SPINNER (Minimalist Streamlined Layout) -->
         <div id="tabContentGantry" class="tab-content">
-            <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 8px; height: 100%;">
-                
-                <!-- LeSlider Linear Rail (Motor 8) -->
-                <div class="card" style="border-color: var(--yellow-accent);">
-                    <div class="card-header" style="color: var(--yellow-accent);">
-                        <span>↔️ LESLIDE CARRIAGE (MOTOR 8)</span>
-                        <span id="sliderValDisplay" class="tick-val">2503 ticks</span>
-                    </div>
-
-                    <div style="margin: 6px 0;">
-                        <input type="range" id="sliderRangeInput" min="3" max="4800" value="2503" step="10" 
-                               style="color: var(--yellow-accent);" oninput="onSliderMove(this.value)" onchange="sendSliderMove(this.value)">
-                    </div>
-
-                    <!-- Step Nudge Taps -->
-                    <div style="display: grid; grid-template-columns: repeat(4, 1fr); gap: 4px; margin-top: 2px;">
-                        <button class="btn-touch btn-yellow" style="padding: 6px 2px; min-height: 40px; font-size: 11px;" onclick="nudgeSlider(-50)">◀ -50</button>
-                        <button class="btn-touch btn-yellow" style="padding: 6px 2px; min-height: 40px; font-size: 11px;" onclick="nudgeSlider(-10)">◀ -10</button>
-                        <button class="btn-touch btn-yellow" style="padding: 6px 2px; min-height: 40px; font-size: 11px;" onclick="nudgeSlider(10)">+10 ▶</button>
-                        <button class="btn-touch btn-yellow" style="padding: 6px 2px; min-height: 40px; font-size: 11px;" onclick="nudgeSlider(50)">+50 ▶</button>
-                    </div>
-
-                    <!-- Large Presets -->
-                    <div style="display: grid; grid-template-columns: repeat(3, 1fr); gap: 4px; margin-top: 4px;">
-                        <button class="btn-touch btn-yellow" style="min-height: 40px; font-size: 11px;" onclick="setSliderPreset(3)">LEFT (3)</button>
-                        <button class="btn-touch btn-yellow" style="min-height: 40px; font-size: 11px;" onclick="setSliderPreset(2503)">CENTER (2503)</button>
-                        <button class="btn-touch btn-yellow" style="min-height: 40px; font-size: 11px;" onclick="setSliderPreset(4800)">RIGHT (4800)</button>
-                    </div>
-
-                    <!-- Hard-Stop Re-Sync Panel -->
-                    <div style="margin-top: 6px; background: rgba(0,0,0,0.3); border: 1.5px solid var(--orange-accent); border-radius: 8px; padding: 6px;">
-                        <div style="font-size: 10px; font-weight: 800; color: var(--orange-accent); margin-bottom: 4px; text-align: center;">
-                            🛠️ RE-SYNC TO PHYSICAL HARD STOP
-                        </div>
-                        <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 4px;">
-                            <button class="btn-touch btn-orange" style="min-height: 38px; font-size: 11px;" onclick="syncGantryLeft()">🛠️ SYNC LEFT (3)</button>
-                            <button class="btn-touch btn-orange" style="min-height: 38px; font-size: 11px;" onclick="syncGantryRight()">🛠️ SYNC RIGHT (4800)</button>
-                        </div>
-                    </div>
+            
+            <!-- Motor 8: LeSlide Linear Rail -->
+            <div class="card" style="flex: 1; border-left: 4px solid var(--yellow-accent);">
+                <div class="card-title">
+                    <span style="color: var(--yellow-accent);">↔️ LESLIDE CARRIAGE (MOTOR 8)</span>
+                    <span id="sliderValDisplay" class="tick-display">2503 ticks</span>
                 </div>
 
-                <!-- Pedestal Spinner (Servo 7) -->
-                <div class="card" style="border-color: var(--cyan-accent);">
-                    <div class="card-header" style="color: var(--cyan-accent);">
-                        <span>🔄 PEDESTAL SPINNER (SERVO 7)</span>
-                        <span id="pedestalValDisplay" class="tick-val">2048 ticks (0°)</span>
-                    </div>
-
-                    <div style="margin: 6px 0;">
-                        <input type="range" id="pedestalRangeInput" min="0" max="4095" value="2048" step="10" 
-                               style="color: var(--cyan-accent);" oninput="onPedestalMove(this.value)" onchange="sendPedestalMove(this.value)">
-                    </div>
-
-                    <!-- Step Nudge Taps -->
-                    <div style="display: grid; grid-template-columns: repeat(4, 1fr); gap: 4px; margin-top: 2px;">
-                        <button class="btn-touch btn-cyan" style="padding: 6px 2px; min-height: 40px; font-size: 11px;" onclick="nudgePedestal(-57)">◀ -5°</button>
-                        <button class="btn-touch btn-cyan" style="padding: 6px 2px; min-height: 40px; font-size: 11px;" onclick="nudgePedestal(-11)">◀ -1°</button>
-                        <button class="btn-touch btn-cyan" style="padding: 6px 2px; min-height: 40px; font-size: 11px;" onclick="nudgePedestal(11)">+1° ▶</button>
-                        <button class="btn-touch btn-cyan" style="padding: 6px 2px; min-height: 40px; font-size: 11px;" onclick="nudgePedestal(57)">+5° ▶</button>
-                    </div>
-
-                    <!-- Large Presets -->
-                    <div style="display: grid; grid-template-columns: repeat(3, 1fr); gap: 4px; margin-top: 4px;">
-                        <button class="btn-touch btn-cyan" style="min-height: 40px; font-size: 11px;" onclick="setPedestalPreset(1024)">-90° (1024)</button>
-                        <button class="btn-touch btn-cyan" style="min-height: 40px; font-size: 11px;" onclick="setPedestalPreset(2048)">0° FRONT (2048)</button>
-                        <button class="btn-touch btn-cyan" style="min-height: 40px; font-size: 11px;" onclick="setPedestalPreset(3072)">+90° (3072)</button>
-                    </div>
-
-                    <!-- Diagnostic Quick Action -->
-                    <div style="margin-top: 6px; background: rgba(0,0,0,0.3); border: 1.5px solid var(--cyan-accent); border-radius: 8px; padding: 6px;">
-                        <div style="font-size: 10px; font-weight: 800; color: var(--cyan-accent); margin-bottom: 4px; text-align: center;">
-                            🔄 PEDESTAL DIRECT ANGLE NUDGE
-                        </div>
-                        <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 4px;">
-                            <button class="btn-touch btn-cyan" style="min-height: 38px; font-size: 11px;" onclick="setPedestalPreset(1536)">-45° (1536)</button>
-                            <button class="btn-touch btn-cyan" style="min-height: 38px; font-size: 11px;" onclick="setPedestalPreset(2560)">+45° (2560)</button>
-                        </div>
-                    </div>
+                <!-- Streamlined Nudge & Slider Bar -->
+                <div class="nudge-bar">
+                    <button class="nudge-btn" onclick="nudgeSlider(-50)">-50</button>
+                    <button class="nudge-btn" onclick="nudgeSlider(-10)">-10</button>
+                    
+                    <input type="range" id="sliderRangeInput" min="3" max="4800" value="2503" step="10" 
+                           style="color: var(--yellow-accent);" oninput="onSliderMove(this.value)" onchange="sendSliderMove(this.value)">
+                    
+                    <button class="nudge-btn" onclick="nudgeSlider(10)">+10</button>
+                    <button class="nudge-btn" onclick="nudgeSlider(50)">+50</button>
                 </div>
 
+                <!-- Clean Preset & Re-Sync Action Row -->
+                <div style="display: grid; grid-template-columns: 1fr 1.2fr 1fr; gap: 8px; margin-top: 4px;">
+                    <button class="btn-act btn-orange-solid" onclick="syncGantryLeft()">🛑 SYNC LEFT (3)</button>
+                    <button class="btn-act btn-yellow-outline" onclick="setSliderPreset(2503)">🎯 CENTER (2503)</button>
+                    <button class="btn-act btn-orange-solid" onclick="syncGantryRight()">🛑 SYNC RIGHT (4800)</button>
+                </div>
             </div>
+
+            <!-- Servo 7: Pedestal Spinner -->
+            <div class="card" style="flex: 1; border-left: 4px solid var(--cyan-accent);">
+                <div class="card-title">
+                    <span style="color: var(--cyan-accent);">🔄 PEDESTAL SPINNER (SERVO 7)</span>
+                    <span id="pedestalValDisplay" class="tick-display">2048 ticks (0°)</span>
+                </div>
+
+                <!-- Streamlined Nudge & Slider Bar -->
+                <div class="nudge-bar">
+                    <button class="nudge-btn" onclick="nudgePedestal(-57)">-5°</button>
+                    <button class="nudge-btn" onclick="nudgePedestal(-11)">-1°</button>
+                    
+                    <input type="range" id="pedestalRangeInput" min="0" max="4095" value="2048" step="10" 
+                           style="color: var(--cyan-accent);" oninput="onPedestalMove(this.value)" onchange="sendPedestalMove(this.value)">
+                    
+                    <button class="nudge-btn" onclick="nudgePedestal(11)">+1°</button>
+                    <button class="nudge-btn" onclick="nudgePedestal(57)">+5°</button>
+                </div>
+
+                <!-- Clean Angle Presets Action Row -->
+                <div style="display: grid; grid-template-columns: 1fr 1.2fr 1fr; gap: 8px; margin-top: 4px;">
+                    <button class="btn-act btn-cyan-outline" onclick="setPedestalPreset(1024)">↺ -90° (1024)</button>
+                    <button class="btn-act btn-cyan-outline" onclick="setPedestalPreset(2048)">🎯 FRONT (2048)</button>
+                    <button class="btn-act btn-cyan-outline" onclick="setPedestalPreset(3072)">↻ +90° (3072)</button>
+                </div>
+            </div>
+
         </div>
 
         <!-- TAB 3: ⚡ POWER & SYSTEM TOOLS -->
@@ -433,25 +412,25 @@
             <div style="display: grid; grid-template-columns: 1.2fr 1fr; gap: 8px; height: 100%;">
                 
                 <div id="mainPowerTile" class="power-tile-large" onclick="triggerPi500PowerOn()">
-                    <span id="powerTileIcon" style="font-size: 48px;">⚡</span>
-                    <span id="powerTileText" style="font-size: 20px; font-family: 'Outfit'; font-weight: 900; letter-spacing: 1px;">TAP TO POWER ON PI 500</span>
-                    <span style="font-size: 12px; opacity: 0.8;">Dispatches Layer-2 Ethernet Wake-on-LAN Magic Packet</span>
+                    <span id="powerTileIcon" style="font-size: 40px;">⚡</span>
+                    <span id="powerTileText" style="font-size: 18px; font-family: 'Outfit'; font-weight: 900;">TAP TO POWER ON PI 500</span>
+                    <span style="font-size: 11px; opacity: 0.8;">Dispatches Layer-2 Ethernet Wake-on-LAN Magic Packet</span>
                 </div>
 
                 <div class="card" style="justify-content: space-between;">
-                    <div class="card-header">
+                    <div class="card-title">
                         <span>🛠️ SYSTEM DIAGNOSTICS</span>
                     </div>
 
-                    <div style="display: flex; flex-direction: column; gap: 8px; font-size: 12px;">
+                    <div style="display: flex; flex-direction: column; gap: 6px; font-size: 12px;">
                         <div>Pi 500 Network IP: <strong style="color:var(--cyan-accent)">192.168.0.130</strong></div>
                         <div>Pi 4B Touch Screen: <strong style="color:var(--cyan-accent)">192.168.0.86</strong></div>
                         <div>Gantry Daemon API: <strong style="color:var(--yellow-accent)">Port 8085</strong></div>
                         <div>SO-101 Arm ZMQ: <strong style="color:var(--green-accent)">Port 5555</strong></div>
                     </div>
 
-                    <button class="btn-touch btn-orange" style="margin-top: 12px;" onclick="window.location.href='/calibration.html'">
-                        🎯 Recalibrate Touchscreen Sensitivity
+                    <button class="btn-act btn-cyan-outline" style="margin-top: 10px;" onclick="window.location.href='/calibration.html'">
+                        🎯 Recalibrate Touchscreen
                     </button>
                 </div>
 
