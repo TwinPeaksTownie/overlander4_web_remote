@@ -366,14 +366,14 @@
                         <input type="range" id="sliderRangeInput" min="3" max="4800" value="2503" step="10" 
                                style="width: 100%; height: 32px; accent-color: #f8d800; cursor: pointer;" 
                                oninput="onSliderMove(this.value)" onchange="sendSliderMove(this.value)">
-                        <div style="display: flex; gap: 6px; margin-top: 8px;">
-                            <button class="wifi-btn" style="flex: 1; padding: 6px; min-height: 32px; font-size: 10px;" onclick="setSliderPreset(3)">LEFT (3)</button>
-                            <button class="wifi-btn" style="flex: 1; padding: 6px; min-height: 32px; font-size: 10px;" onclick="setSliderPreset(2503)">CENTER (2503)</button>
-                            <button class="wifi-btn" style="flex: 1; padding: 6px; min-height: 32px; font-size: 10px;" onclick="setSliderPreset(4800)">RIGHT (4800)</button>
+                        <div style="display: flex; gap: 8px; margin-top: 10px;">
+                            <button class="wifi-btn" style="flex: 1; padding: 10px 4px; min-height: 44px; font-size: 12px; font-weight: 900;" onclick="setSliderPreset(3)">LEFT (3)</button>
+                            <button class="wifi-btn" style="flex: 1; padding: 10px 4px; min-height: 44px; font-size: 12px; font-weight: 900;" onclick="setSliderPreset(2503)">CENTER (2503)</button>
+                            <button class="wifi-btn" style="flex: 1; padding: 10px 4px; min-height: 44px; font-size: 12px; font-weight: 900;" onclick="setSliderPreset(4800)">RIGHT (4800)</button>
                         </div>
-                        <div style="display: flex; gap: 6px; margin-top: 6px;">
-                            <button class="wifi-btn" style="background: #ff9900; color: #000; flex: 1; padding: 4px; min-height: 28px; font-size: 10px;" onclick="syncGantryLeft()">🛠️ SYNC LEFT (3)</button>
-                            <button class="wifi-btn" style="background: #ff9900; color: #000; flex: 1; padding: 4px; min-height: 28px; font-size: 10px;" onclick="syncGantryRight()">🛠️ SYNC RIGHT (4800)</button>
+                        <div style="display: flex; gap: 8px; margin-top: 8px;">
+                            <button class="wifi-btn" style="background: #ff9900; color: #000; flex: 1; padding: 10px 4px; min-height: 46px; font-size: 12px; font-weight: 900; box-shadow: 0 3px #cc7a00;" onclick="syncGantryLeft()">🛠️ SYNC LEFT (3)</button>
+                            <button class="wifi-btn" style="background: #ff9900; color: #000; flex: 1; padding: 10px 4px; min-height: 46px; font-size: 12px; font-weight: 900; box-shadow: 0 3px #cc7a00;" onclick="syncGantryRight()">🛠️ SYNC RIGHT (4800)</button>
                         </div>
                     </div>
 
@@ -386,10 +386,10 @@
                         <input type="range" id="pedestalRangeInput" min="0" max="4095" value="2048" step="10" 
                                style="width: 100%; height: 32px; accent-color: #00e5ff; cursor: pointer;" 
                                oninput="onPedestalMove(this.value)" onchange="sendPedestalMove(this.value)">
-                        <div style="display: flex; gap: 6px; margin-top: 8px;">
-                            <button class="wifi-btn" style="background: #00e5ff; color: #000; flex: 1; padding: 6px; min-height: 32px; font-size: 10px;" onclick="setPedestalPreset(1024)">-90° (1024)</button>
-                            <button class="wifi-btn" style="background: #00e5ff; color: #000; flex: 1; padding: 6px; min-height: 32px; font-size: 10px;" onclick="setPedestalPreset(2048)">0° FRONT (2048)</button>
-                            <button class="wifi-btn" style="background: #00e5ff; color: #000; flex: 1; padding: 6px; min-height: 32px; font-size: 10px;" onclick="setPedestalPreset(3072)">+90° (3072)</button>
+                        <div style="display: flex; gap: 8px; margin-top: 10px;">
+                            <button class="wifi-btn" style="background: #00e5ff; color: #000; flex: 1; padding: 10px 4px; min-height: 44px; font-size: 12px; font-weight: 900;" onclick="setPedestalPreset(1024)">-90° (1024)</button>
+                            <button class="wifi-btn" style="background: #00e5ff; color: #000; flex: 1; padding: 10px 4px; min-height: 44px; font-size: 12px; font-weight: 900;" onclick="setPedestalPreset(2048)">0° FRONT (2048)</button>
+                            <button class="wifi-btn" style="background: #00e5ff; color: #000; flex: 1; padding: 10px 4px; min-height: 44px; font-size: 12px; font-weight: 900;" onclick="setPedestalPreset(3072)">+90° (3072)</button>
                         </div>
                     <!-- Large Bottom-Right Power & System Status Tile -->
                     <div id="mainPowerTile" class="power-tile offline" onclick="triggerPi500PowerOn()" title="Tap to Power On Pi 500">
