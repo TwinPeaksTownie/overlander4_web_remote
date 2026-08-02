@@ -28,7 +28,42 @@ API_URL = "http://127.0.0.1:8085"
 ZMQ_ROVER_HOST = "127.0.0.1"
 ZMQ_ROVER_PORT = 5558
 
+import math
+import struct
+import subprocess
+
 logging.basicConfig(level=logging.INFO, format='%(asctime)s [%(levelname)s] %(message)s')
+
+def play_chime(kind="connect"):
+    def _work():
+        try:
+            sr = 22050
+            buf = bytearray()
+            if kind == "connect":
+                # Ascending chime: C5 (523Hz) -> E5 (659Hz) -> G5 (784Hz)
+                tones = [(523.25, 0.08, 0.3), (659.25, 0.08, 0.3), (784.00, 0.16, 0.4)]
+            else:
+                # Descending chime: G5 (784Hz) -> C5 (523Hz)
+                tones = [(784.00, 0.10, 0.3), (523.25, 0.18, 0.3)]
+            for freq, duration, vol in tones:
+                n_samples = int(sr * duration)
+                for i in range(n_samples):
+                    t = i / sr
+                    val = int(vol * 32767 * math.sin(2 * math.pi * freq * t))
+                    buf.extend(struct.pack('<h', val))
+            wav_path = f"/tmp/chime_{kind}.wav"
+            with open(wav_path, "wb") as f:
+                f.write(b"RIFF")
+                f.write(struct.pack("<I", 36 + len(buf)))
+                f.write(b"WAVEfmt ")
+                f.write(struct.pack("<IHHIIHH", 16, 1, 1, sr, sr * 2, 2, 16))
+                f.write(b"data")
+                f.write(struct.pack("<I", len(buf)))
+                f.write(buf)
+            subprocess.run(["aplay", "-q", wav_path], check=False)
+        except Exception:
+            pass
+    threading.Thread(target=_work, daemon=True).start()
 
 
 class PokeballTeleopDriver:
@@ -193,10 +228,12 @@ class PokeballTeleopDriver:
                 async with BleakClient(self.mac_address, timeout=6.0) as client:
                     self.client = client
                     logging.info("✅ Connected to Poké Ball Plus!")
+                    play_chime("connect")
                     await client.start_notify(INPUT_UUID, self.notification_handler)
                     logging.info("Listening for Poké Ball Plus telemetry...")
                     while client.is_connected:
                         await asyncio.sleep(1.0)
+                    play_chime("disconnect")
             except Exception as e:
                 logging.info("Poké Ball BLE waiting for device (press button to wake up)... [%s]", e)
                 await asyncio.sleep(3.0)
