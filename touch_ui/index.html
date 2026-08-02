@@ -4,23 +4,7 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
     <title>Overlander 4 Touch Controller</title>
-    <link rel="preconnect" href="https://fonts.googleapis.com">
-    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@500;700;900&family=Outfit:wght@600;800;900&display=swap" rel="stylesheet">
     <style>
-        :root {
-            --bg-dark: #090d16;
-            --card-bg: #121927;
-            --card-border: rgba(255, 255, 255, 0.1);
-            --cyan-accent: #00e5ff;
-            --yellow-accent: #f8d800;
-            --green-accent: #10b981;
-            --red-accent: #ff3344;
-            --orange-accent: #ff9900;
-            --text-main: #ffffff;
-            --text-muted: #94a3b8;
-        }
-
         * {
             box-sizing: border-box;
             margin: 0;
@@ -31,530 +15,140 @@
         }
 
         body {
-            font-family: 'Inter', sans-serif;
-            background: var(--bg-dark);
-            color: var(--text-main);
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+            background: #000000;
+            color: #ffffff;
             width: 100vw;
             height: 100vh;
             overflow: hidden;
             display: flex;
             flex-direction: column;
-            padding: 8px;
-            gap: 8px;
+            padding: 10px;
+            gap: 10px;
         }
 
-        /* Fixed Top Navigation Bar */
-        .top-navbar {
-            height: 50px;
-            background: #141c2d;
-            border: 1.5px solid var(--card-border);
-            border-radius: 10px;
+        /* Top Header Readout */
+        .header-bar {
+            height: 44px;
             display: flex;
             align-items: center;
             justify-content: space-between;
             padding: 0 12px;
+            background: #111111;
+            border: 2px solid #333333;
+            border-radius: 8px;
             flex-shrink: 0;
         }
 
-        .brand-title {
-            font-family: 'Outfit', sans-serif;
-            font-size: 15px;
+        .title {
+            font-size: 16px;
             font-weight: 900;
-            color: var(--cyan-accent);
-            letter-spacing: 0.5px;
-            display: flex;
-            align-items: center;
-            gap: 8px;
+            color: #00e5ff;
         }
 
-        /* Tab Switcher Pills */
-        .tab-switcher {
-            display: flex;
-            gap: 4px;
-            background: rgba(0, 0, 0, 0.5);
-            padding: 3px;
-            border-radius: 20px;
-            border: 1px solid var(--card-border);
-        }
-
-        .tab-btn {
-            background: transparent;
-            border: none;
-            color: var(--text-muted);
-            font-family: 'Outfit', sans-serif;
-            font-size: 12px;
-            font-weight: 800;
-            padding: 6px 14px;
-            border-radius: 16px;
-            cursor: pointer;
-            transition: all 0.15s ease;
-        }
-
-        .tab-btn.active {
-            background: var(--cyan-accent);
-            color: #000000;
-            box-shadow: 0 0 12px rgba(0, 229, 255, 0.3);
-        }
-
-        .status-badge {
-            font-size: 11px;
-            font-weight: 800;
-            padding: 5px 12px;
-            border-radius: 16px;
-            background: rgba(16, 185, 129, 0.2);
-            border: 1.5px solid var(--green-accent);
-            color: var(--green-accent);
-            display: flex;
-            align-items: center;
-            gap: 6px;
-        }
-
-        .status-badge.offline {
-            background: rgba(255, 51, 68, 0.2);
-            border-color: var(--red-accent);
-            color: var(--red-accent);
-        }
-
-        .status-dot { width: 7px; height: 7px; border-radius: 50%; background: currentColor; }
-
-        /* Main View Container */
-        .view-container {
-            flex-grow: 1;
-            position: relative;
-            width: 100%;
-            height: calc(100vh - 74px);
-        }
-
-        .tab-content {
-            display: none;
-            width: 100%;
-            height: 100%;
-        }
-
-        .tab-content.active {
-            display: flex;
-            flex-direction: column;
-            gap: 8px;
-        }
-
-        /* Glassmorphic Cards */
-        .card {
-            background: var(--card-bg);
-            border: 1.5px solid var(--card-border);
-            border-radius: 12px;
-            padding: 10px 14px;
-            display: flex;
-            flex-direction: column;
-        }
-
-        .card-title {
-            font-family: 'Outfit', sans-serif;
-            font-size: 13px;
+        .readout {
+            font-family: monospace;
+            font-size: 22px;
             font-weight: 900;
-            color: var(--text-muted);
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
+            color: #f8d800;
         }
 
-        /* Tab 1: Arm & Teleop Tile Grid */
-        .teleop-grid {
-            display: grid;
-            grid-template-columns: repeat(3, 1fr);
-            gap: 8px;
-            flex-grow: 1;
-        }
-
-        .arm-tile {
-            background: #182234;
-            border: 2.5px solid var(--cyan-accent);
-            border-radius: 12px;
-            display: flex;
-            flex-direction: column;
-            align-items: center;
-            justify-content: center;
-            padding: 12px 6px;
-            cursor: pointer;
-            box-shadow: 0 4px #0a111c;
-            transition: all 0.15s ease;
-            gap: 10px;
-            text-align: center;
-            color: var(--text-main);
-        }
-
-        .arm-tile:active { transform: translateY(2px); box-shadow: 0 1px #0a111c; }
-        .arm-tile.leader-tile { border-color: var(--cyan-accent); }
-        .arm-tile.follower-tile { border-color: #00ff66; }
-        .arm-tile.pokeball-tile { border-color: var(--red-accent); }
-
-        .arm-tile.running-leader { background: var(--cyan-accent) !important; color: #000 !important; }
-        .arm-tile.running-follower { background: #00ff66 !important; color: #000 !important; }
-        .arm-tile.running-pokeball { background: #ffffff !important; color: #111 !important; }
-
-        .tile-icon { font-size: 36px; line-height: 1; pointer-events: none; }
-        .tile-label { font-family: 'Outfit', sans-serif; font-size: 12px; font-weight: 900; }
-
-        /* Minimalist Action Buttons */
-        .btn-act {
-            background: #1e293b;
-            border: 1.5px solid var(--card-border);
-            color: var(--text-main);
-            font-family: 'Outfit', sans-serif;
-            font-size: 12px;
-            font-weight: 900;
-            padding: 8px 12px;
-            min-height: 44px;
+        /* Large Range Slider Track */
+        .slider-box {
+            height: 54px;
+            background: #111111;
+            border: 2px solid #333333;
             border-radius: 8px;
-            cursor: pointer;
+            padding: 6px 12px;
             display: flex;
             align-items: center;
-            justify-content: center;
-            gap: 4px;
-            box-shadow: 0 2px rgba(0, 0, 0, 0.4);
-            transition: all 0.12s ease;
-        }
-
-        .btn-act:active { transform: translateY(1px); box-shadow: none; }
-        .btn-yellow-outline { border-color: var(--yellow-accent); color: var(--yellow-accent); }
-        .btn-cyan-outline { border-color: var(--cyan-accent); color: var(--cyan-accent); }
-        .btn-orange-solid { background: var(--orange-accent); color: #000000; border: none; }
-
-        /* Clean Horizontal Slider Control Bar */
-        .nudge-bar {
-            display: flex;
-            align-items: center;
-            gap: 8px;
-            margin: 8px 0;
-        }
-
-        .nudge-btn {
-            background: #1e293b;
-            border: 1.5px solid var(--card-border);
-            color: var(--text-main);
-            font-family: 'Outfit', monospace;
-            font-size: 12px;
-            font-weight: 900;
-            min-width: 52px;
-            height: 42px;
-            border-radius: 8px;
-            cursor: pointer;
-            display: flex;
-            align-items: center;
-            justify-content: center;
             flex-shrink: 0;
         }
-
-        .nudge-btn:active { background: var(--cyan-accent); color: #000000; }
 
         input[type="range"] {
             -webkit-appearance: none;
-            flex-grow: 1;
-            height: 36px;
+            width: 100%;
+            height: 40px;
             border-radius: 6px;
-            background: #0f172a;
-            border: 1px solid var(--card-border);
+            background: #222222;
             outline: none;
         }
 
         input[type="range"]::-webkit-slider-thumb {
             -webkit-appearance: none;
-            width: 32px;
-            height: 32px;
-            border-radius: 50%;
-            background: currentColor;
+            width: 48px;
+            height: 48px;
+            border-radius: 6px;
+            background: #f8d800;
             cursor: pointer;
         }
 
-        .tick-display {
-            font-family: 'Outfit', monospace;
-            font-size: 18px;
-            font-weight: 900;
-            color: #ffffff;
-        }
-
-        /* Power Tile */
-        .power-tile-large {
-            background: linear-gradient(135deg, #7f1d1d, #991b1b);
-            border: 2px solid var(--red-accent);
-            border-radius: 12px;
-            padding: 20px;
-            display: flex;
-            flex-direction: column;
-            align-items: center;
-            justify-content: center;
-            gap: 10px;
-            cursor: pointer;
+        /* Massive Giant Touch Buttons Grid */
+        .giant-grid {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 12px;
             flex-grow: 1;
         }
 
-        .power-tile-large.online {
-            background: linear-gradient(135deg, #065f46, #047857);
-            border-color: var(--green-accent);
+        .btn-giant {
+            background: #1a1a1a;
+            border: 3px solid #444444;
+            color: #ffffff;
+            font-size: 20px;
+            font-weight: 900;
+            border-radius: 12px;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            text-align: center;
+            padding: 10px;
+            line-height: 1.2;
+        }
+
+        .btn-giant:active {
+            background: #00e5ff;
+            color: #000000;
+            border-color: #00e5ff;
+        }
+
+        .btn-orange {
+            border-color: #ff9900;
+            color: #ff9900;
+            background: #221500;
+        }
+
+        .btn-orange:active {
+            background: #ff9900;
+            color: #000000;
         }
     </style>
 </head>
 <body>
 
-    <!-- Fixed Top Navbar -->
-    <div class="top-navbar">
-        <div class="brand-title">
-            <span>🤖 OVERLANDER 4</span>
-        </div>
-
-        <div class="tab-switcher">
-            <button id="tabBtnControls" class="tab-btn active" onclick="switchTab('controls')">🦾 CONTROLS</button>
-            <button id="tabBtnGantry" class="tab-btn" onclick="switchTab('gantry')">⚙️ GANTRY & SPINNER</button>
-            <button id="tabBtnPower" class="tab-btn" onclick="switchTab('power')">⚡ POWER & TOOLS</button>
-        </div>
-
-        <div id="statusBadge" class="status-badge">
-            <div class="status-dot"></div>
-            <span id="statusText">PI 500 ONLINE</span>
-        </div>
+    <!-- Simple Header Readout -->
+    <div class="header-bar">
+        <div class="title">↔️ LESLIDE CARRIAGE (MOTOR 8)</div>
+        <div id="sliderValDisplay" class="readout">2503 ticks</div>
     </div>
 
-    <!-- Main View Container -->
-    <div class="view-container">
+    <!-- Full-Width Coarse Slider -->
+    <div class="slider-box">
+        <input type="range" id="sliderRangeInput" min="3" max="4800" value="2503" step="10" 
+               oninput="onSliderMove(this.value)" onchange="sendSliderMove(this.value)">
+    </div>
 
-        <!-- TAB 1: 🦾 CONTROLS (Arm & Teleop Systems) -->
-        <div id="tabContentControls" class="tab-content active">
-            <div class="card" style="flex-grow: 1;">
-                <div class="card-title">
-                    <span>🦾 TELEOPERATION CONTROLLERS</span>
-                </div>
-                <div class="teleop-grid" style="margin-top: 8px;">
-                    <div id="leaderTile" class="arm-tile leader-tile" onclick="toggleMacLeader()">
-                        <div id="leaderIcon" class="tile-icon">🍎</div>
-                        <div id="leaderText" class="tile-label">START LEADER</div>
-                    </div>
+    <!-- 4 MASSIVE 75px+ TALL TOUCH BUTTONS -->
+    <div class="giant-grid">
+        <button class="btn-giant" onclick="nudgeSlider(-50)">◀ NUDGE LEFT<br>(-50 TICKS)</button>
+        <button class="btn-giant" onclick="nudgeSlider(50)">NUDGE RIGHT ▶<br>(+50 TICKS)</button>
 
-                    <div id="followerTile" class="arm-tile follower-tile" onclick="togglePi500Follower()">
-                        <div id="followerIcon" class="tile-icon">🦾</div>
-                        <div id="followerText" class="tile-label">START FOLLOWER</div>
-                    </div>
-
-                    <div id="pokeballTile" class="arm-tile pokeball-tile" onclick="togglePokeballTeleop()">
-                        <div id="pokeballIcon" class="tile-icon">🔴</div>
-                        <div id="pokeballText" class="tile-label">CONNECT POKÉBALL</div>
-                    </div>
-                </div>
-            </div>
-
-            <div class="card" style="height: 64px; justify-content: center;">
-                <div style="display: flex; gap: 10px; align-items: center; justify-content: space-between;">
-                    <span id="wifiInfo" style="font-size: 12px; color: var(--text-muted);">Wi-Fi Hotspot status standby...</span>
-                    <button class="btn-act btn-yellow-outline" style="min-height: 38px; padding: 0 16px;" onclick="scanWifi()">📡 SCAN HOTSPOT</button>
-                </div>
-            </div>
-        </div>
-
-        <!-- TAB 2: ⚙️ GANTRY & SPINNER (Minimalist Streamlined Layout) -->
-        <div id="tabContentGantry" class="tab-content">
-            
-            <!-- Motor 8: LeSlide Linear Rail -->
-            <div class="card" style="flex: 1; border-left: 4px solid var(--yellow-accent);">
-                <div class="card-title">
-                    <span style="color: var(--yellow-accent);">↔️ LESLIDE CARRIAGE (MOTOR 8)</span>
-                    <span id="sliderValDisplay" class="tick-display">2503 ticks</span>
-                </div>
-
-                <!-- Streamlined Nudge & Slider Bar -->
-                <div class="nudge-bar">
-                    <button class="nudge-btn" onclick="nudgeSlider(-50)">-50</button>
-                    <button class="nudge-btn" onclick="nudgeSlider(-10)">-10</button>
-                    
-                    <input type="range" id="sliderRangeInput" min="3" max="4800" value="2503" step="10" 
-                           style="color: var(--yellow-accent);" oninput="onSliderMove(this.value)" onchange="sendSliderMove(this.value)">
-                    
-                    <button class="nudge-btn" onclick="nudgeSlider(10)">+10</button>
-                    <button class="nudge-btn" onclick="nudgeSlider(50)">+50</button>
-                </div>
-
-                <!-- Clean Preset & Re-Sync Action Row -->
-                <div style="display: grid; grid-template-columns: 1fr 1.2fr 1fr; gap: 8px; margin-top: 4px;">
-                    <button class="btn-act btn-orange-solid" onclick="syncGantryLeft()">🛑 SYNC LEFT (3)</button>
-                    <button class="btn-act btn-yellow-outline" onclick="setSliderPreset(2503)">🎯 CENTER (2503)</button>
-                    <button class="btn-act btn-orange-solid" onclick="syncGantryRight()">🛑 SYNC RIGHT (4800)</button>
-                </div>
-            </div>
-
-            <!-- Servo 7: Pedestal Spinner -->
-            <div class="card" style="flex: 1; border-left: 4px solid var(--cyan-accent);">
-                <div class="card-title">
-                    <span style="color: var(--cyan-accent);">🔄 PEDESTAL SPINNER (SERVO 7)</span>
-                    <span id="pedestalValDisplay" class="tick-display">2048 ticks (0°)</span>
-                </div>
-
-                <!-- Streamlined Nudge & Slider Bar -->
-                <div class="nudge-bar">
-                    <button class="nudge-btn" onclick="nudgePedestal(-57)">-5°</button>
-                    <button class="nudge-btn" onclick="nudgePedestal(-11)">-1°</button>
-                    
-                    <input type="range" id="pedestalRangeInput" min="0" max="4095" value="2048" step="10" 
-                           style="color: var(--cyan-accent);" oninput="onPedestalMove(this.value)" onchange="sendPedestalMove(this.value)">
-                    
-                    <button class="nudge-btn" onclick="nudgePedestal(11)">+1°</button>
-                    <button class="nudge-btn" onclick="nudgePedestal(57)">+5°</button>
-                </div>
-
-                <!-- Clean Angle Presets Action Row -->
-                <div style="display: grid; grid-template-columns: 1fr 1.2fr 1fr; gap: 8px; margin-top: 4px;">
-                    <button class="btn-act btn-cyan-outline" onclick="setPedestalPreset(1024)">↺ -90° (1024)</button>
-                    <button class="btn-act btn-cyan-outline" onclick="setPedestalPreset(2048)">🎯 FRONT (2048)</button>
-                    <button class="btn-act btn-cyan-outline" onclick="setPedestalPreset(3072)">↻ +90° (3072)</button>
-                </div>
-            </div>
-
-        </div>
-
-        <!-- TAB 3: ⚡ POWER & SYSTEM TOOLS -->
-        <div id="tabContentPower" class="tab-content">
-            <div style="display: grid; grid-template-columns: 1.2fr 1fr; gap: 8px; height: 100%;">
-                
-                <div id="mainPowerTile" class="power-tile-large" onclick="triggerPi500PowerOn()">
-                    <span id="powerTileIcon" style="font-size: 40px;">⚡</span>
-                    <span id="powerTileText" style="font-size: 18px; font-family: 'Outfit'; font-weight: 900;">TAP TO POWER ON PI 500</span>
-                    <span style="font-size: 11px; opacity: 0.8;">Dispatches Layer-2 Ethernet Wake-on-LAN Magic Packet</span>
-                </div>
-
-                <div class="card" style="justify-content: space-between;">
-                    <div class="card-title">
-                        <span>🛠️ SYSTEM DIAGNOSTICS</span>
-                    </div>
-
-                    <div style="display: flex; flex-direction: column; gap: 6px; font-size: 12px;">
-                        <div>Pi 500 Network IP: <strong style="color:var(--cyan-accent)">192.168.0.130</strong></div>
-                        <div>Pi 4B Touch Screen: <strong style="color:var(--cyan-accent)">192.168.0.86</strong></div>
-                        <div>Gantry Daemon API: <strong style="color:var(--yellow-accent)">Port 8085</strong></div>
-                        <div>SO-101 Arm ZMQ: <strong style="color:var(--green-accent)">Port 5555</strong></div>
-                    </div>
-
-                    <button class="btn-act btn-cyan-outline" style="margin-top: 10px;" onclick="window.location.href='/calibration.html'">
-                        🎯 Recalibrate Touchscreen
-                    </button>
-                </div>
-
-            </div>
-        </div>
-
+        <button class="btn-giant btn-orange" onclick="syncGantryLeft()">🛑 SYNC LEFT<br>HARD STOP (3)</button>
+        <button class="btn-giant btn-orange" onclick="syncGantryRight()">🛑 SYNC RIGHT<br>HARD STOP (4800)</button>
     </div>
 
     <script>
-        function switchTab(tabId) {
-            document.querySelectorAll('.tab-btn').forEach(btn => btn.classList.remove('active'));
-            document.querySelectorAll('.tab-content').forEach(content => content.classList.remove('active'));
-
-            if (tabId === 'controls') {
-                document.getElementById('tabBtnControls').classList.add('active');
-                document.getElementById('tabContentControls').classList.add('active');
-            } else if (tabId === 'gantry') {
-                document.getElementById('tabBtnGantry').classList.add('active');
-                document.getElementById('tabContentGantry').classList.add('active');
-            } else if (tabId === 'power') {
-                document.getElementById('tabBtnPower').classList.add('active');
-                document.getElementById('tabContentPower').classList.add('active');
-            }
-        }
-
-        let isLeaderRunning = false;
-        let isFollowerRunning = false;
-        let isPokeballRunning = false;
-
-        function checkMacLeader() {
-            fetch('/api/mac_leader_status')
-                .then(r => r.json())
-                .then(data => {
-                    isLeaderRunning = data.running;
-                    const tile = document.getElementById('leaderTile');
-                    const text = document.getElementById('leaderText');
-                    if (isLeaderRunning) {
-                        text.innerText = 'STOP LEADER';
-                        tile.className = 'arm-tile leader-tile running-leader';
-                    } else {
-                        text.innerText = 'START LEADER';
-                        tile.className = 'arm-tile leader-tile';
-                    }
-                }).catch(() => {});
-        }
-
-        function toggleMacLeader() {
-            const action = isLeaderRunning ? 'stop' : 'start';
-            fetch('/api/mac_leader_toggle', {
-                method: 'POST',
-                headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({ action: action })
-            }).then(() => setTimeout(checkMacLeader, 1000));
-        }
-
-        function checkPi500Follower() {
-            fetch('/api/pi500_follower_status')
-                .then(r => r.json())
-                .then(data => {
-                    isFollowerRunning = data.running;
-                    const tile = document.getElementById('followerTile');
-                    const text = document.getElementById('followerText');
-                    if (isFollowerRunning) {
-                        text.innerText = 'STOP FOLLOWER';
-                        tile.className = 'arm-tile follower-tile running-follower';
-                    } else {
-                        text.innerText = 'START FOLLOWER';
-                        tile.className = 'arm-tile follower-tile';
-                    }
-                }).catch(() => {});
-        }
-
-        function togglePi500Follower() {
-            const action = isFollowerRunning ? 'stop' : 'start';
-            fetch('/api/pi500_follower_toggle', {
-                method: 'POST',
-                headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({ action: action })
-            }).then(() => setTimeout(checkPi500Follower, 1000));
-        }
-
-        function checkPokeballTeleop() {
-            fetch('/api/pokeball_teleop_status')
-                .then(r => r.json())
-                .then(data => {
-                    isPokeballRunning = data.running || data.active;
-                    const tile = document.getElementById('pokeballTile');
-                    const text = document.getElementById('pokeballText');
-                    const icon = document.getElementById('pokeballIcon');
-                    if (isPokeballRunning) {
-                        text.innerText = 'DISCONNECT POKÉBALL';
-                        icon.innerText = '🔴';
-                        tile.className = 'arm-tile pokeball-tile running-pokeball';
-                    } else {
-                        text.innerText = 'CONNECT POKÉBALL';
-                        icon.innerText = '⚪';
-                        tile.className = 'arm-tile pokeball-tile';
-                    }
-                }).catch(() => {});
-        }
-
-        function togglePokeballTeleop() {
-            const action = isPokeballRunning ? 'stop' : 'start';
-            fetch('/api/pokeball_teleop_toggle', {
-                method: 'POST',
-                headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({ action: action })
-            }).then(() => setTimeout(checkPokeballTeleop, 1000));
-        }
-
-        function scanWifi() {
-            const info = document.getElementById('wifiInfo');
-            info.innerText = 'Scanning nearby networks...';
-            fetch('/api/wifi_scan')
-                .then(r => r.json())
-                .then(data => {
-                    if (data.networks && data.networks.length > 0) {
-                        info.innerText = `Hotspot: ${data.networks[0].ssid} (${data.networks[0].signal}%)`;
-                    } else {
-                        info.innerText = 'No networks detected.';
-                    }
-                }).catch(() => { info.innerText = 'Scan failed.'; });
-        }
-
         function onSliderMove(val) {
             document.getElementById('sliderValDisplay').innerText = val + ' ticks';
         }
@@ -568,25 +162,12 @@
             });
         }
 
-        function setSliderPreset(val) {
-            document.getElementById('sliderRangeInput').value = val;
-            sendSliderMove(val);
-        }
-
         function nudgeSlider(delta) {
             const input = document.getElementById('sliderRangeInput');
             let newVal = parseInt(input.value) + delta;
             newVal = Math.max(3, Math.min(4800, newVal));
             input.value = newVal;
             sendSliderMove(newVal);
-        }
-
-        function nudgePedestal(delta) {
-            const input = document.getElementById('pedestalRangeInput');
-            let newVal = parseInt(input.value) + delta;
-            newVal = Math.max(0, Math.min(4095, newVal));
-            input.value = newVal;
-            sendPedestalMove(newVal);
         }
 
         function syncGantryLeft() {
@@ -608,68 +189,6 @@
                 body: JSON.stringify({ pos: 4800 })
             });
         }
-
-        function onPedestalMove(val) {
-            const deg = Math.round((val - 2048) * (360 / 4096));
-            document.getElementById('pedestalValDisplay').innerText = val + ' ticks (' + (deg >= 0 ? '+' : '') + deg + '°)';
-        }
-
-        function sendPedestalMove(val) {
-            onPedestalMove(val);
-            fetch('/api/pedestal', {
-                method: 'POST',
-                headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({ value: parseInt(val) })
-            });
-        }
-
-        function setPedestalPreset(val) {
-            document.getElementById('pedestalRangeInput').value = val;
-            sendPedestalMove(val);
-        }
-
-        function updatePowerUI(online) {
-            const badge = document.getElementById('statusBadge');
-            const tile = document.getElementById('mainPowerTile');
-            if (online) {
-                badge.className = 'status-badge';
-                document.getElementById('statusText').innerText = 'PI 500 ONLINE';
-                if (tile) {
-                    tile.className = 'power-tile-large online';
-                    document.getElementById('powerTileText').innerText = 'PI 500 ONLINE';
-                }
-            } else {
-                badge.className = 'status-badge offline';
-                document.getElementById('statusText').innerText = 'PI 500 OFFLINE';
-                if (tile) {
-                    tile.className = 'power-tile-large';
-                    document.getElementById('powerTileText').innerText = 'TAP TO POWER ON PI 500';
-                }
-            }
-        }
-
-        function triggerPi500PowerOn() {
-            fetch('/api/pi500_poweron', { method: 'POST' });
-        }
-
-        function checkStatus() {
-            fetch('/api/status')
-                .then(r => r.json())
-                .then(d => updatePowerUI(d.pi500_online))
-                .catch(() => updatePowerUI(false));
-        }
-
-        setInterval(checkStatus, 3000);
-        setInterval(checkMacLeader, 3000);
-        setInterval(checkPi500Follower, 3000);
-        setInterval(checkPokeballTeleop, 3000);
-
-        window.onload = function() {
-            checkStatus();
-            checkMacLeader();
-            checkPi500Follower();
-            checkPokeballTeleop();
-        };
     </script>
 </body>
 </html>
