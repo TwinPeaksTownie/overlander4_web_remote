@@ -1,0 +1,683 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>Rover & Arm Teleop Dashboard</title>
+    <style>
+        * {
+            box-sizing: border-box;
+            user-select: none;
+            -webkit-user-select: none;
+            touch-action: manipulation;
+        }
+
+        body {
+            margin: 0;
+            padding: 8px;
+            background: #121212;
+            color: #ffffff;
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+            overflow: hidden;
+            width: 100vw;
+            height: 100vh;
+        }
+
+        .top-bar {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            height: 52px;
+            padding: 0 12px;
+            background: #1e1e1e;
+            border-radius: 10px;
+            margin-bottom: 8px;
+            border: 2px solid #333333;
+        }
+
+        .title {
+            font-size: 17px;
+            font-weight: 900;
+            color: #00e5ff;
+            letter-spacing: 1px;
+        }
+
+        .status-badge {
+            font-size: 13px;
+            font-weight: 800;
+            padding: 8px 16px;
+            border-radius: 24px;
+            background: #00e5ff;
+            color: #000000;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            cursor: pointer;
+            border: 2px solid rgba(255, 255, 255, 0.25);
+            transition: all 0.2s ease;
+            box-shadow: 0 0 12px rgba(0, 229, 255, 0.35);
+        }
+
+        .status-badge:active {
+            transform: scale(0.93);
+            filter: brightness(1.25);
+        }
+
+        .status-badge.offline {
+            background: #ff3344;
+            color: #ffffff;
+            box-shadow: 0 0 14px rgba(255, 51, 68, 0.6);
+        }
+
+        /* Large Bottom-Right Power-On Tile */
+        .power-tile {
+            background: linear-gradient(135deg, #1e293b, #0f172a);
+            border: 3px solid #ff3344;
+            border-radius: 10px;
+            padding: 10px 14px;
+            margin-top: 6px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 12px;
+            cursor: pointer;
+            min-height: 54px;
+            user-select: none;
+            transition: all 0.2s ease;
+            box-shadow: 0 0 14px rgba(255, 51, 68, 0.5);
+        }
+
+        .power-tile:active {
+            transform: scale(0.95);
+            filter: brightness(1.25);
+        }
+
+        .power-tile.offline {
+            background: linear-gradient(135deg, #7f1d1d, #991b1b);
+            border-color: #ff3344;
+            color: #ffffff;
+            box-shadow: 0 0 18px rgba(255, 51, 68, 0.75);
+            animation: pulse-power 1.5s infinite alternate;
+        }
+
+        .power-tile.waking {
+            background: linear-gradient(135deg, #b45309, #d97706);
+            border-color: #f59e0b;
+            color: #ffffff;
+            box-shadow: 0 0 18px rgba(245, 158, 11, 0.85);
+        }
+
+        .power-tile.online {
+            background: linear-gradient(135deg, #065f46, #047857);
+            border-color: #10b981;
+            color: #ffffff;
+            box-shadow: 0 0 14px rgba(16, 185, 129, 0.5);
+        }
+
+        @keyframes pulse-power {
+            0% { box-shadow: 0 0 8px rgba(255, 51, 68, 0.4); }
+            100% { box-shadow: 0 0 22px rgba(255, 51, 68, 0.9); }
+        }
+
+        .power-tile-icon {
+            font-size: 22px;
+        }
+
+        .power-tile-text {
+            font-size: 15px;
+            font-weight: 900;
+            letter-spacing: 1px;
+        }
+
+        .main-grid {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 8px;
+            height: calc(100vh - 56px);
+        }
+
+        .col {
+            display: flex;
+            flex-direction: column;
+            gap: 8px;
+            height: 100%;
+        }
+
+        .card {
+            background: #1a1a1a;
+            border: 2px solid #333;
+            border-radius: 12px;
+            padding: 8px;
+            display: flex;
+            flex-direction: column;
+        }
+
+        .card-header {
+            font-size: 13px;
+            font-weight: 800;
+            color: #a0a0a0;
+            margin-bottom: 6px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .arm-card { border-color: #00e5ff; background: #0f1c24; flex-grow: 1; }
+
+        .arm-grid {
+            display: grid;
+            grid-template-columns: 1fr 1fr 1fr;
+            gap: 8px;
+            flex-grow: 1;
+        }
+
+        .arm-tile {
+            background: #182834;
+            border: 3px solid #00e5ff;
+            border-radius: 12px;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            padding: 12px 6px;
+            cursor: pointer;
+            box-shadow: 0 4px #006680;
+            transition: all 0.15s ease;
+            gap: 12px;
+            text-align: center;
+            color: #ffffff;
+
+            /* Touch target optimization */
+            touch-action: manipulation;
+            -webkit-tap-highlight-color: transparent;
+        }
+
+        .arm-tile:active {
+            transform: translateY(2px);
+            box-shadow: 0 1px #006680;
+        }
+
+        .arm-tile.leader-tile {
+            border-color: #00e5ff;
+            box-shadow: 0 4px #0088cc;
+        }
+
+        .arm-tile.follower-tile {
+            border-color: #00ff66;
+            box-shadow: 0 4px #009933;
+        }
+
+        .arm-tile.pokeball-tile {
+            border-color: #ff3344;
+            box-shadow: 0 4px #990011;
+        }
+
+        /* Color Fill when Running */
+        .arm-tile.running-leader {
+            background: #00e5ff !important;
+            color: #000000 !important;
+            border-color: #ffffff !important;
+            box-shadow: 0 0 16px #00e5ff !important;
+        }
+
+        .arm-tile.running-follower {
+            background: #00ff66 !important;
+            color: #000000 !important;
+            border-color: #ffffff !important;
+            box-shadow: 0 0 16px #00ff66 !important;
+        }
+
+        .arm-tile.running-pokeball {
+            background: #ffffff !important;
+            color: #111111 !important;
+            border-color: #00e5ff !important;
+            box-shadow: 0 0 20px #ffffff !important;
+        }
+
+        .tile-icon {
+            font-size: 32px;
+            line-height: 1;
+            pointer-events: none;
+        }
+
+        .tile-label-text {
+            font-size: 11px;
+            font-weight: 900;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+            line-height: 1.2;
+            pointer-events: none;
+        }
+
+        .wifi-row {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        .wifi-btn {
+            background: #f8d800;
+            color: #000000;
+            font-size: 11px;
+            font-weight: 900;
+            padding: 6px 12px;
+            border-radius: 6px;
+            cursor: pointer;
+            box-shadow: 0 3px #998000;
+            flex-shrink: 0;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            touch-action: manipulation;
+        }
+
+        .wifi-btn:active { transform: translateY(2px); box-shadow: 0 1px #000; }
+
+        .wifi-info {
+            font-size: 11px;
+            color: #d0e0f0;
+            white-space: nowrap;
+            overflow: hidden;
+            text-overflow: ellipsis;
+            flex-grow: 1;
+        }
+
+        .gantry-card {
+            height: 100%;
+            display: flex;
+            flex-direction: column;
+            justify-content: space-between;
+            border-color: #f8d800;
+            background: #1a1a1a;
+        }
+
+        .calib-link {
+            text-align: center;
+            background: rgba(255,255,255,0.05);
+            border: 2px dashed rgba(255,255,255,0.2);
+            border-radius: 6px;
+            padding: 6px;
+            font-size: 10px;
+            color: #a0b0c0;
+            cursor: pointer;
+            margin-top: 4px;
+        }
+    </style>
+</head>
+<body>
+
+    <div class="top-bar">
+        <div class="title">ROVER & ARM CONTROLLER</div>
+        <div id="statusBadge" class="status-badge">
+            <span id="statusDot">●</span> PI 500 ONLINE
+        </div>
+    </div>
+
+    <div class="main-grid">
+        <!-- Left Column: Arm Teleop Tiles & Wi-Fi Hotspot -->
+        <div class="col">
+            <div class="card arm-card">
+                <div class="card-header">
+                    <span>🦾 CONTROLLER SYSTEM</span>
+                </div>
+                <div class="arm-grid">
+                    <div id="leaderTile" class="arm-tile leader-tile" onclick="toggleMacLeader()">
+                        <div id="leaderIcon" class="tile-icon">🍎</div>
+                        <div id="leaderText" class="tile-label-text">START LEADER</div>
+                    </div>
+
+                    <div id="followerTile" class="arm-tile follower-tile" onclick="togglePi500Follower()">
+                        <div id="followerIcon" class="tile-icon">🦾</div>
+                        <div id="followerText" class="tile-label-text">START FOLLOWER</div>
+                    </div>
+
+                    <div id="pokeballTile" class="arm-tile pokeball-tile" onclick="togglePokeballTeleop()">
+                        <div id="pokeballIcon" class="tile-icon">🔴</div>
+                        <div id="pokeballText" class="tile-label-text">CONNECT POKÉBALL</div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="card wifi-card">
+                <div class="card-header">
+                    <span>📡 WI-FI HOTSPOT FINDER</span>
+                </div>
+                <div class="wifi-row">
+                    <div class="wifi-btn" onclick="scanWifi()">SCAN HOTSPOT</div>
+                    <div id="wifiInfo" class="wifi-info">Tap scan to detect Wi-Fi networks...</div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Right Column: Linear Slide & Pedestal Spinner Controls -->
+        <div class="col">
+            <div class="card gantry-card">
+                <div class="card-header" style="color: #f8d800;">
+                    <span>⚡ GANTRY & SLIDE CONTROLS</span>
+                </div>
+                
+                <div style="display: flex; flex-direction: column; gap: 10px; margin-top: 4px; flex-grow: 1;">
+                    <!-- LeSlider Linear Carriage Control (Motor 8 FEETECH) -->
+                    <div style="background: #252210; border: 2px solid #f8d800; border-radius: 8px; padding: 10px;">
+                        <div style="display: flex; justify-content: space-between; font-size: 12px; font-weight: 900; color: #f8d800; margin-bottom: 6px;">
+                            <span>↔️ LESLIDE CARRIAGE (MOTOR 8)</span>
+                            <span id="sliderValDisplay">2503 ticks</span>
+                        </div>
+                        <input type="range" id="sliderRangeInput" min="3" max="4800" value="2503" step="10" 
+                               style="width: 100%; height: 32px; accent-color: #f8d800; cursor: pointer;" 
+                               oninput="onSliderMove(this.value)" onchange="sendSliderMove(this.value)">
+                        <div style="display: flex; gap: 6px; margin-top: 8px;">
+                            <button class="wifi-btn" style="flex: 1; padding: 6px; min-height: 32px; font-size: 10px;" onclick="setSliderPreset(3)">LEFT (3)</button>
+                            <button class="wifi-btn" style="flex: 1; padding: 6px; min-height: 32px; font-size: 10px;" onclick="setSliderPreset(2503)">CENTER (2503)</button>
+                            <button class="wifi-btn" style="flex: 1; padding: 6px; min-height: 32px; font-size: 10px;" onclick="setSliderPreset(4800)">RIGHT (4800)</button>
+                        </div>
+                    </div>
+
+                    <!-- Pedestal Spinner Control (Servo ID 7) -->
+                    <div style="background: #0f1c24; border: 2px solid #00e5ff; border-radius: 8px; padding: 10px;">
+                        <div style="display: flex; justify-content: space-between; font-size: 12px; font-weight: 900; color: #00e5ff; margin-bottom: 6px;">
+                            <span>🔄 PEDESTAL SPINNER (SERVO 7)</span>
+                            <span id="pedestalValDisplay">2048 ticks (0°)</span>
+                        </div>
+                        <input type="range" id="pedestalRangeInput" min="0" max="4095" value="2048" step="10" 
+                               style="width: 100%; height: 32px; accent-color: #00e5ff; cursor: pointer;" 
+                               oninput="onPedestalMove(this.value)" onchange="sendPedestalMove(this.value)">
+                        <div style="display: flex; gap: 6px; margin-top: 8px;">
+                            <button class="wifi-btn" style="background: #00e5ff; color: #000; flex: 1; padding: 6px; min-height: 32px; font-size: 10px;" onclick="setPedestalPreset(1024)">-90° (1024)</button>
+                            <button class="wifi-btn" style="background: #00e5ff; color: #000; flex: 1; padding: 6px; min-height: 32px; font-size: 10px;" onclick="setPedestalPreset(2048)">0° FRONT (2048)</button>
+                            <button class="wifi-btn" style="background: #00e5ff; color: #000; flex: 1; padding: 6px; min-height: 32px; font-size: 10px;" onclick="setPedestalPreset(3072)">+90° (3072)</button>
+                        </div>
+                    <!-- Large Bottom-Right Power & System Status Tile -->
+                    <div id="mainPowerTile" class="power-tile offline" onclick="triggerPi500PowerOn()" title="Tap to Power On Pi 500">
+                        <span id="powerTileIcon" class="power-tile-icon">⚡</span>
+                        <span id="powerTileText" class="power-tile-text">TAP TO POWER ON PI 500</span>
+                    </div>
+                </div>
+
+                <div class="calib-link" onclick="window.location.href='/calibration.html'">
+                    🎯 Recalibrate Touchscreen Sensitivity
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        let isLeaderRunning = false;
+        let isFollowerRunning = false;
+        let isPokeballRunning = false;
+
+        function checkMacLeader() {
+            fetch('/api/mac_leader_status')
+                .then(r => r.json())
+                .then(data => {
+                    isLeaderRunning = data.running;
+                    const tile = document.getElementById('leaderTile');
+                    const text = document.getElementById('leaderText');
+
+                    if (isLeaderRunning) {
+                        text.innerText = `STOP LEADER`;
+                        tile.className = 'arm-tile leader-tile running-leader';
+                    } else {
+                        text.innerText = 'START LEADER';
+                        tile.className = 'arm-tile leader-tile';
+                    }
+                })
+                .catch(err => {
+                    document.getElementById('leaderText').innerText = 'OFFLINE';
+                });
+        }
+
+        function toggleMacLeader() {
+            const text = document.getElementById('leaderText');
+            text.innerText = 'CONNECTING...';
+            const action = isLeaderRunning ? 'stop' : 'start';
+
+            fetch('/api/mac_leader_toggle', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ action: action })
+            })
+            .then(r => r.json())
+            .then(res => {
+                setTimeout(checkMacLeader, 1000);
+            })
+            .catch(err => {
+                checkMacLeader();
+            });
+        }
+
+        function checkPi500Follower() {
+            fetch('/api/pi500_follower_status')
+                .then(r => r.json())
+                .then(data => {
+                    isFollowerRunning = data.running;
+                    const tile = document.getElementById('followerTile');
+                    const text = document.getElementById('followerText');
+
+                    if (isFollowerRunning) {
+                        text.innerText = `STOP FOLLOWER`;
+                        tile.className = 'arm-tile follower-tile running-follower';
+                    } else {
+                        text.innerText = 'START FOLLOWER';
+                        tile.className = 'arm-tile follower-tile';
+                    }
+                })
+                .catch(err => {
+                    document.getElementById('followerText').innerText = 'OFFLINE';
+                });
+        }
+
+        function togglePi500Follower() {
+            const text = document.getElementById('followerText');
+            text.innerText = 'CONNECTING...';
+            const action = isFollowerRunning ? 'stop' : 'start';
+
+            fetch('/api/pi500_follower_toggle', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ action: action })
+            })
+            .then(r => r.json())
+            .then(res => {
+                setTimeout(checkPi500Follower, 1000);
+            })
+            .catch(err => {
+                checkPi500Follower();
+            });
+        }
+
+        function checkPokeballTeleop() {
+            fetch('/api/pokeball_teleop_status')
+                .then(r => r.json())
+                .then(data => {
+                    isPokeballRunning = data.running || data.active;
+                    const tile = document.getElementById('pokeballTile');
+                    const text = document.getElementById('pokeballText');
+                    const icon = document.getElementById('pokeballIcon');
+
+                    if (isPokeballRunning) {
+                        text.innerText = `DISCONNECT POKÉBALL`;
+                        icon.innerText = '🔴';
+                        tile.className = 'arm-tile pokeball-tile running-pokeball';
+                    } else {
+                        text.innerText = 'CONNECT POKÉBALL';
+                        icon.innerText = '⚪';
+                        tile.className = 'arm-tile pokeball-tile';
+                    }
+                })
+                .catch(err => {
+                    document.getElementById('pokeballText').innerText = 'OFFLINE';
+                    document.getElementById('pokeballIcon').innerText = '⚪';
+                });
+        }
+
+        function togglePokeballTeleop() {
+            const text = document.getElementById('pokeballText');
+            text.innerText = 'CONNECTING...';
+            const action = isPokeballRunning ? 'stop' : 'start';
+
+            fetch('/api/pokeball_teleop_toggle', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ action: action })
+            })
+            .then(r => r.json())
+            .then(res => {
+                setTimeout(checkPokeballTeleop, 1000);
+            })
+            .catch(err => {
+                checkPokeballTeleop();
+            });
+        }
+
+        function scanWifi() {
+            const info = document.getElementById('wifiInfo');
+            info.innerText = 'Scanning nearby Wi-Fi networks...';
+
+            fetch('/api/wifi_scan')
+                .then(r => r.json())
+                .then(data => {
+                    if (data.hotspot_found) {
+                        info.innerText = `🔥 HOTSPOT: ${data.hotspot_ssid} (${data.signal}%)`;
+                        info.style.color = '#f8d800';
+                    } else if (data.networks && data.networks.length > 0) {
+                        info.innerText = `Found ${data.networks.length} networks: ${data.networks[0].ssid} (${data.networks[0].signal}%)`;
+                        info.style.color = '#ffffff';
+                    } else {
+                        info.innerText = 'No networks detected.';
+                    }
+                })
+                .catch(err => {
+                    info.innerText = 'Wi-Fi scan failed.';
+                });
+        }
+
+        function onSliderMove(val) {
+            document.getElementById('sliderValDisplay').innerText = val + ' ticks';
+        }
+
+        function sendSliderMove(val) {
+            document.getElementById('sliderValDisplay').innerText = val + ' ticks';
+            fetch('/api/slider', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ value: parseInt(val) })
+            });
+        }
+
+        function setSliderPreset(val) {
+            document.getElementById('sliderRangeInput').value = val;
+            sendSliderMove(val);
+        }
+
+        function onPedestalMove(val) {
+            const deg = Math.round((val - 2048) * (360 / 4096));
+            document.getElementById('pedestalValDisplay').innerText = val + ' ticks (' + (deg >= 0 ? '+' : '') + deg + '°)';
+        }
+
+        function sendPedestalMove(val) {
+            onPedestalMove(val);
+            fetch('/api/pedestal', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ value: parseInt(val) })
+            });
+        }
+
+        function setPedestalPreset(val) {
+            document.getElementById('pedestalRangeInput').value = val;
+            sendPedestalMove(val);
+        }
+
+        let isWaking = false;
+
+        function updatePowerUI(state) {
+            const badge = document.getElementById('statusBadge');
+            const tile = document.getElementById('mainPowerTile');
+            const tileIcon = document.getElementById('powerTileIcon');
+            const tileText = document.getElementById('powerTileText');
+
+            if (state === 'waking') {
+                if (badge) {
+                    badge.className = 'status-badge waking';
+                    badge.innerHTML = '<span id="statusDot">⚡</span> WAKING...';
+                }
+                if (tile) {
+                    tile.className = 'power-tile waking';
+                    if (tileIcon) tileIcon.innerText = '⚡';
+                    if (tileText) tileText.innerText = 'SENDING POWER ON...';
+                }
+            } else if (state === 'online') {
+                if (badge) {
+                    badge.className = 'status-badge';
+                    badge.innerHTML = '<span id="statusDot">●</span> PI 500 ONLINE';
+                }
+                if (tile) {
+                    tile.className = 'power-tile online';
+                    if (tileIcon) tileIcon.innerText = '●';
+                    if (tileText) tileText.innerText = 'PI 500 ONLINE';
+                }
+            } else { // offline
+                if (badge) {
+                    badge.className = 'status-badge offline';
+                    badge.innerHTML = '<span id="statusDot">●</span> PI 500 OFFLINE';
+                }
+                if (tile) {
+                    tile.className = 'power-tile offline';
+                    if (tileIcon) tileIcon.innerText = '⚡';
+                    if (tileText) tileText.innerText = 'TAP TO POWER ON PI 500';
+                }
+            }
+        }
+
+        function triggerPi500PowerOn() {
+            isWaking = true;
+            updatePowerUI('waking');
+
+            fetch('/api/pi500_poweron', { method: 'POST' })
+                .then(r => r.json())
+                .then(d => {
+                    console.log('PowerOn Dispatched:', d);
+                    setTimeout(() => {
+                        isWaking = false;
+                        checkStatus();
+                    }, 5000);
+                })
+                .catch(err => {
+                    console.error('PowerOn request failed:', err);
+                    isWaking = false;
+                    checkStatus();
+                });
+        }
+
+        function checkStatus() {
+            fetch('/api/status')
+                .then(r => r.json())
+                .then(d => {
+                    if (isWaking) return;
+                    if (d.pi500_online) {
+                        updatePowerUI('online');
+                    } else {
+                        updatePowerUI('offline');
+                    }
+                })
+                .catch(() => {
+                    if (isWaking) return;
+                    updatePowerUI('offline');
+                });
+        }
+
+        setInterval(checkStatus, 3000);
+        setInterval(checkMacLeader, 3000);
+        setInterval(checkPi500Follower, 3000);
+        setInterval(checkPokeballTeleop, 3000);
+
+        window.onload = function() {
+            checkStatus();
+            checkMacLeader();
+            checkPi500Follower();
+            checkPokeballTeleop();
+        };
+    </script>
+</body>
+</html>
